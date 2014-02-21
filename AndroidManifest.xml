@@ -35,7 +35,7 @@
             android:name="com.ma.dc.SettingsActivity"
             android:label="@string/action_settings"/>
         <provider
-      		android:name="com.ma.dc.contentprovider.DcContentProviderder"
+      		android:name="com.ma.dc.contentprovider.DcContentProvider"
       		android:authorities="com.ma.dc.contentprovider"
       		android:exported="false" >
    		</provider>
