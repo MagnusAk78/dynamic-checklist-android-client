@@ -10,8 +10,8 @@ public final class Common {
     public final static String HTTP_STRING = "http://";
     public final static String CLOUDANT_END = ".cloudant.com";
 
-    public final static String CHECKPOINTS_VIEW_END = "/_design/dwt_server_app/_view/checkpoints";
-    public final static String MEASUREMENTS_VIEW_END = "/_design/dwt_server_app/_view/measurements";
+    public final static String CHECKPOINTS_VIEW_END = "/_design/dc_server_app/_view/checkpoints";
+    public final static String MEASUREMENTS_VIEW_END = "/_design/dc_server_app/_view/measurements";
 
     public final static String CHECKPOINT_TYPE_STRING = "checkpoint";
     public final static String MEASUREMENT_TYPE_STRING = "measurement";
