@@ -22,7 +22,7 @@
             android:layout_gravity="center_vertical|left"
             style="@android:style/TextAppearance.DeviceDefault.Large"/>
 
-        <com.oof.customviews.BoxedProgressBar
+        <com.ma.customviews.BoxedProgressBar
             android:id="@+id/checkpoint_row_boxed_progress_bar"
             android:layout_width="0dp"
             android:layout_weight="40"
