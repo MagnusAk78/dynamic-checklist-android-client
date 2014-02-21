@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">dwt</string>
+    <string name="title_checkpoint_detail">Checkpoint detaljer</string>
+
+    <string name="OK">OK</string>
+    <string name="Cancel">Avbryt</string>
+    
+    <string name="action_refresh">Uppdatera</string>
+    <string name="action_settings">Inställningar</string>
+    
+    <string name="check_done_check_ok">Markerad som OK!</string>
+    <string name="check_done_check_ok_after_action">Markerad som OK efter åtgärd!</string>
+    <string name="check_done_check_not_ok">Markerad som INTE OK!</string>
+    <string name="check_done_problem">Checkpoint är inte uppdaterad, det var problem med databasen!</string>
+    
+    <string name="progress_title">Synkar med server</string>
+    <string name="progress_info_upload_measurements">Skickar nya värden till server</string>
+    <string name="progress_info_removing_outdated_information">Tar bort gammal information</string>
+    <string name="progress_info_updating">Hämtar data från servern</string>
+    
+    <string name="update_info_ok">Allt gick bra</string>
+    <string name="update_info_not_ok">Uppdatering misslyckades !!!</string>
+    
+    <string name="upload_data_not_ok_toast">Problem att skicka nya värden till servern!</string>
+    <string name="update_checkpoints_not_ok_toast">Problem att hämta data från servern!</string>
+    
+    <string name="checkpoint_detail_OK_btn">OK</string>
+    <string name="checkpoint_detail_OK_after_action_btn">OK efter åtgärd</string>
+    <string name="checkpoint_detail_Not_OK_btn">Not OK</string>
+    
+    <string name="checkpoint_row_time_to_next_check_text">Kolla</string>
+    <string name="checkpoint_row_update_frequency_text">Frekvens</string>
+    <string name="checkpoint_row_title">Titel</string>
+    <string name="checkpoint_row_progress_image_description">Image showing how critical a new check is needed</string>
+    
+    <string name="seconds">sekunder</string>
+    <string name="second">sekund</string>
+    <string name="minutes">minuter</string>
+    <string name="minute">minut</string>
+    <string name="hours">timmar</string>
+    <string name="hour">timme</string>
+    <string name="days">dagar</string>
+    <string name="day">dag</string>
+    
+    <string name="time_ago">sedan</string>
+    <string name="in_time">om</string>
+    
+    <string name="dialog_ok_after_action_title">OK efter åtgärd</string>
+    
+    <string name="dialog_not_ok_title">Checkpoint INTE OK</string>
+    
+    <string name="multi_option_other">Annat</string>
+    
+    <string name="preferences_checkpoint_catagory">Checkpoint hantering</string>
+    <string name="preferences_checkpoint_sorting">Sortering av Checkpoints</string>
+    <string name="preferences_checkpoint_sorting_summary">Sorteringsordning</string>
+    
+    <string name="preferences_network_catagory">Cloudant</string>
+    <string name="preferences_cloadant_name">Cloudant namn</string>
+    <string name="preferences_cloudant_name_default">namn</string>
+    <string name="preferences_cloudant_name_summary">Cloudant name ([name].cloudant.com))</string>
+    <string name="preferences_database_name">Databas namn</string>
+    <string name="preferences_database_name_default">databas</string>
+    <string name="preferences_database_name_summary">Databasnamn</string>
+</resources>

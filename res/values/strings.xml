@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Dynamic checklist</string>
+    <string name="title_checkpoint_detail">Checkpoint Detail</string>
+
+    <string name="OK">OK</string>
+    <string name="Cancel">Cancel</string>
+    
+    <string name="action_refresh">Refresh</string>
+    <string name="action_settings">Settings</string>
+    
+    <string name="check_done_check_ok">Checked as OK!</string>
+    <string name="check_done_check_ok_after_action">Checked as OK after action!</string>
+    <string name="check_done_check_not_ok">Checkpoint is now in state NOT OK!</string>
+    <string name="check_done_problem">Checkpoint not updated, there was a database problem!</string>
+    
+    <string name="progress_title">Synching with server</string>
+    <string name="progress_info_upload_measurements">Uploading new values to server</string>
+    <string name="progress_info_removing_outdated_information">Removing outdated information</string>
+    <string name="progress_info_updating">Downloading data from the server</string>
+    
+    <string name="update_info_ok">All went OK</string>
+    <string name="update_info_not_ok">Update failed !!!</string>
+    
+    <string name="upload_data_not_ok_toast">There was a problem uploading new values to server!</string>
+    <string name="update_checkpoints_not_ok_toast">There was a problem downloading checkpoints from the server!</string>
+    <string name="download_images_not_ok_toast">There was a problem downloading images from the server!</string>
+    
+    <string name="checkpoint_detail_OK_btn">OK</string>
+    <string name="checkpoint_detail_OK_after_action_btn">OK with action</string>
+    <string name="checkpoint_detail_Not_OK_btn">Not OK</string>
+    
+    <string name="checkpoint_row_time_to_next_check_text">Check</string>
+    <string name="checkpoint_row_update_frequency_text">Every</string>
+    <string name="checkpoint_row_title">title</string>
+    <string name="checkpoint_row_progress_image_description">Image showing how critical a new check is needed</string>
+    
+    <string name="seconds">seconds</string>
+    <string name="second">seconds</string>
+    <string name="minutes">minutes</string>
+    <string name="minute">minute</string>
+    <string name="hours">hours</string>
+    <string name="hour">hour</string>
+    <string name="days">days</string>
+    <string name="day">day</string>
+    
+    <string name="time_ago">ago</string>
+    <string name="in_time">in</string>
+    
+    <string name="dialog_ok_after_action_title">Checkpoint OK after action</string>
+    
+    <string name="dialog_not_ok_title">Checkpoint NOT OK</string>
+    
+    <string name="multi_option_other">Other</string>
+    
+    <string name="preferences_checkpoint_catagory">Checkpoint handling</string>
+    <string name="preferences_checkpoint_sorting">Sorting Checkpoint</string>
+    <string name="preferences_checkpoint_sorting_summary">How should the checkpoints be ordered</string>
+    
+    <string name="preferences_network_catagory">Cloudant</string>
+    <string name="preferences_cloadant_name">Cloudant name</string>
+    <string name="preferences_cloudant_name_default">name</string>
+    <string name="preferences_cloudant_name_summary">Cloudant name ([name].cloudant.com))</string>
+    <string name="preferences_database_name">Database</string>
+    <string name="preferences_database_name_default">database</string>
+    <string name="preferences_database_name_summary">The name of the database.</string>
+</resources>

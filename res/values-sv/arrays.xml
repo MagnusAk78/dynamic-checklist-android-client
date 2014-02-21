@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="checkpoint_sorting">
+        <item name="fixed_sort">Sortera i nummerordning</item>
+        <item name="dynamic_sort_importance">Sortera efter tid kvar</item>
+    </string-array>
+
+    <string-array name="checkpoint_sorting_values">
+        <item name="fixed_sort">1</item>
+        <item name="dynamic_sort_importance">2</item>
+    </string-array>
+
+</resources>

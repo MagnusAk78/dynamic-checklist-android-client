@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="@string/preferences_checkpoint_catagory" >
+
+    <ListPreference
+        android:defaultValue="1"
+        android:key="pref_key_checkpoint_sort_order"
+        android:summary="@string/preferences_checkpoint_sorting_summary"
+        android:title="@string/preferences_checkpoint_sorting" 
+        android:entries="@array/checkpoint_sorting"
+        android:entryValues="@array/checkpoint_sorting_values"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/preferences_network_catagory" >
+
+    <EditTextPreference
+    	android:defaultValue="@string/preferences_cloudant_name_default"
+        android:key="pref_key_cloudant_name"
+        android:title="@string/preferences_cloadant_name" 
+        android:summary="@string/preferences_cloudant_name_summary"/>
+    
+    <EditTextPreference
+    	android:defaultValue="@string/preferences_database_name_default"
+        android:key="pref_key_database_name"
+        android:title="@string/preferences_database_name" 
+        android:summary="@string/preferences_database_name_summary"/>
+    
+	</PreferenceCategory>
+
+</PreferenceScreen>

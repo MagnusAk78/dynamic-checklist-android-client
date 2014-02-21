@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   <declare-styleable name="BoxedProgressBar">       
+       <attr name="setProgressInPercent" format="integer" />
+       <attr name="nrOfBoxes" format="integer" />
+       <attr name="startColor" format="color"/>
+       <attr name="intermediateColor" format="color"/>
+       <attr name="criticalColor" format="color"/>
+   </declare-styleable>
+</resources>

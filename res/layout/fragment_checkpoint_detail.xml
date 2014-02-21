@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".CheckpointDetailFragment" 
+    android:layout_margin="16dp">
+
+    <TextView
+        android:id="@+id/checkpoint_detail_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="checkpoint_detail_name"
+        android:layout_centerHorizontal="true"        
+		android:layout_alignParentTop="true"     
+		android:textStyle="bold"   
+        style="@android:style/TextAppearance.DeviceDefault.Large" />
+
+    <TextView
+        android:id="@+id/checkpoint_detail_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/checkpoint_detail_name"
+        android:text="checkpoint_detail_description"
+        style="@android:style/TextAppearance.DeviceDefault.Medium" />
+    
+
+    
+        <LinearLayout
+            android:id="@+id/checkpoint_detail_button_group"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"        
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"        
+        android:layout_centerHorizontal="true" >
+        
+            <ImageButton
+                android:id="@+id/checkpoint_detail_ok_btn"
+                style="@style/AppBaseTheme"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:contentDescription="Check ok button"
+                android:padding="6dp"
+                android:src="@drawable/ic_ok" />
+        
+            <ImageButton
+                android:id="@+id/checkpoint_detail_ok_after_action_btn"
+                style="@style/AppBaseTheme"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"
+                android:layout_weight="1"
+                android:contentDescription="Check ok after some action button"
+                android:padding="6dp"
+                android:src="@drawable/ic_problem_fixed"
+                android:text="@string/checkpoint_detail_OK_after_action_btn" />
+    
+    <ImageButton
+        android:id="@+id/checkpoint_detail_not_ok_btn"
+        style="@style/AppBaseTheme"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
+        android:contentDescription="Check not ok button"
+        android:padding="6dp"
+        android:src="@drawable/ic_not_ok" />
+        
+        </LinearLayout>
+        
+    <FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_above="@id/checkpoint_detail_button_group"
+    android:layout_below="@id/checkpoint_detail_description" >
+
+    <ImageView
+        android:id="@+id/checkpoint_detail_image_view"
+        android:scaleType="centerInside"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="16dp"/>
+    </FrameLayout>    
+
+</RelativeLayout>
