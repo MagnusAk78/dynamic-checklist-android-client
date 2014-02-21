@@ -21,10 +21,10 @@ public final class Common {
     public final static int START_BUFFER_SIZE_URL_READ = 4000;
 
     // Logging
-    public final static String LOG_TAG_MAIN = "DWT-MAIN";
-    public final static String LOG_TAG_DB = "DWT-DB";
-    public final static String LOG_TAG_NETWORK = "DWT-NETWORK";
-    public final static String LOG_TAG_CONTENT_PROVIDER = "DWT-CONTENT_PROVIDER";
+    public final static String LOG_TAG_MAIN = "DC-MAIN";
+    public final static String LOG_TAG_DB = "DC-DB";
+    public final static String LOG_TAG_NETWORK = "DC-NETWORK";
+    public final static String LOG_TAG_CONTENT_PROVIDER = "DC-CONTENT_PROVIDER";
     
     public final static int LOG_LEVEL = Log.WARN;
     

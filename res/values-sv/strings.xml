@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">dwt</string>
+    <string name="app_name">Dynamic checklist</string>
     <string name="title_checkpoint_detail">Checkpoint detaljer</string>
 
     <string name="OK">OK</string>

@@ -15,13 +15,13 @@ import android.text.TextUtils;
 
 import com.ma.dc.Common;
 import com.ma.dc.database.DbTableCheckpoint;
-import com.ma.dc.database.DwtDatabaseHelper;
+import com.ma.dc.database.DcDatabaseHelper;
 import com.ma.dc.util.LogHelper;
 
 public class DcContentProvider extends ContentProvider {
 
     // database
-    private DwtDatabaseHelper database;
+    private DcDatabaseHelper database;
 
     // Used for the UriMacher
     private static final int CHECKPOINTS = 10;
@@ -95,7 +95,7 @@ public class DcContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        database = new DwtDatabaseHelper(getContext());
+        database = new DcDatabaseHelper(getContext());
         return false;
     }
 
