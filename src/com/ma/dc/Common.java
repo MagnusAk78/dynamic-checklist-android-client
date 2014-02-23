@@ -26,7 +26,7 @@ public final class Common {
     public final static String LOG_TAG_NETWORK = "DC-NETWORK";
     public final static String LOG_TAG_CONTENT_PROVIDER = "DC-CONTENT_PROVIDER";
     
-    public final static int LOG_LEVEL = Log.WARN;
+    public final static int LOG_LEVEL = Log.DEBUG;
     
     //Ugly singleton way but quick
     public static Context listActivity = null;

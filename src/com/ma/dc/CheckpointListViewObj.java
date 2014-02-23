@@ -2,8 +2,8 @@ package com.ma.dc;
 
 import java.util.Comparator;
 import java.util.Date;
-
 import com.ma.dc.database.DbCheckpointHelper;
+import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
 import android.content.ContentValues;
@@ -155,20 +155,13 @@ class CheckpointListViewObj {
         
         int updates = DbCheckpointHelper.getUpdates(checkpointCv).intValue();
         int startTime = DbCheckpointHelper.getStartTime(checkpointCv).intValue();
-        
         String timePeriod = DbCheckpointHelper.getTimePeriod(checkpointCv);
-        
         int startDay = DbCheckpointHelper.getStartDay(checkpointCv).intValue();
         boolean includeWeekends = DbCheckpointHelper.getIncludeWeekends(checkpointCv).booleanValue();
-        
-        
+         
         updateFreqText = getUpdateFreqString(res, updates, timePeriod);
 
-        
-        //LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "CheckpointListViewObj","startDate: " + startDate);
-        //LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "CheckpointListViewObj","updateFrequency: " + updateFrequency);
-        
-        currentTimeCycle = TimeCycle.getCurrentCycle(updates, timePeriod, startTime, startDay, includeWeekends, now);
+        currentTimeCycle = TimeCycle.createCurrentFromCheckpoint(updates, timePeriod, startTime, startDay, includeWeekends);
         updateValues(now, res);
     }
 
@@ -220,17 +213,17 @@ class CheckpointListViewObj {
         return progressVisible;
     }
 
-    void updateValues(final Date now, final Resources res) {
-        Long latestMeasurementDateLong = DbCheckpointHelper.getLatestMeasurementDate(checkpointCv);       
-        if (latestMeasurementDateLong == null) {
-        	latestMeasurementDateLong = now.getTime();
-        }
-        Date latestMeasurementDate = new Date(latestMeasurementDateLong.longValue());
-        
+    void updateValues(final Date now, final Resources res) {        
         enabled = Boolean.TRUE;
 
         if (!currentTimeCycle.isWithin(now)) {
             currentTimeCycle = currentTimeCycle.getNext();
+        }
+        
+    	Date latestMeasurementDate = currentTimeCycle.getPrevious().getStartDate();
+        Long latestMeasurementDateLong = DbCheckpointHelper.getLatestMeasurementDate(checkpointCv);       
+        if (latestMeasurementDateLong != null) {
+        	latestMeasurementDate.setTime(latestMeasurementDateLong.longValue());
         }
 
         Integer latestMeasurementValue = DbCheckpointHelper.getLatestMeasuredValue(checkpointCv);
@@ -246,6 +239,8 @@ class CheckpointListViewObj {
 
         if (currentTimeCycle.isWithin(latestMeasurementDate)) {
             // All is well, the progress bar should be empty
+        	
+        	LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateValues", "currentTimeCycle.isWithin(latestMeasurementDate)");
 
             timeToNextRequriedCheck = currentTimeCycle.getNext().getEndDate().getTime() - latestMeasurementDate.getTime();
             timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);
@@ -261,9 +256,7 @@ class CheckpointListViewObj {
         if (currentTimeCycle.getPrevious().isBefore(latestMeasurementDate)) {
             // The horror, measurement was not done in previous cycle
 
-            final TimeCycle measuredTimeCycle = TimeCycle.getCurrentCycle(
-                    DbCheckpointHelper.getUpdates(checkpointCv), DbCheckpointHelper.getTimePeriod(checkpointCv), DbCheckpointHelper.getStartTime(checkpointCv), 
-                    DbCheckpointHelper.getStartDay(checkpointCv), DbCheckpointHelper.getIncludeWeekends(checkpointCv), now);
+            final TimeCycle measuredTimeCycle = currentTimeCycle.transferToTime(latestMeasurementDate);
 
             timeToNextRequriedCheck = measuredTimeCycle.getNext().getEndDate().getTime() - now.getTime();
             timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);

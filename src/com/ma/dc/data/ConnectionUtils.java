@@ -12,10 +12,12 @@ import java.net.URL;
 import com.androidquery.AQuery;
 import com.androidquery.callback.AjaxCallback;
 import com.androidquery.callback.AjaxStatus;
+import com.ma.dc.Common;
+import com.ma.dc.util.LogHelper;
 
 final class ConnectionUtils {
     
-    static String getJsonDataFromUrl(final String url, final int timeout) throws MalformedURLException, IOException {
+    static String getJsonDataFromUrl(final String url, final int timeout) throws MalformedURLException, IOException {    	
         
         URL u = new URL(url);
         HttpURLConnection c = (HttpURLConnection) u.openConnection();
@@ -27,6 +29,8 @@ final class ConnectionUtils {
         c.setReadTimeout(timeout);
         c.connect();
         int status = c.getResponseCode();
+        
+        LogHelper.logDebug(ConnectionUtils.class, Common.LOG_TAG_NETWORK, "getJsonDataFromUrl", "status: " + status);
         
         switch (status) {
         case 200:

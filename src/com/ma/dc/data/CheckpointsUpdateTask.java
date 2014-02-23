@@ -182,7 +182,12 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
     		final String cloudantName = SettingsFragment.getCloudantName(context);
     		final String databaseName = SettingsFragment.getDatabaseName(context);
     		
+    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: " + cloudantName);
+    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: " + databaseName);
+    		
     		final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
+    		
+    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "baseUrl: " + baseUrl);
             
             return ConnectionUtils.getJsonDataFromUrl(baseUrl + Common.CHECKPOINTS_VIEW_END, 10000);
         } catch (MalformedURLException e) {
