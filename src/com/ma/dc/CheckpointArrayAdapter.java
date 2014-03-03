@@ -1,9 +1,8 @@
 package com.ma.dc;
 
-import java.util.Date;
-
 import com.ma.customviews.BoxedProgressBar;
 import com.ma.dc.R;
+import com.ma.dc.util.LogHelper;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -72,7 +71,10 @@ public class CheckpointArrayAdapter extends ArrayAdapter<CheckpointListViewObj> 
     }
 
     void updateAllValues() {
-        final Date now = new Date();
+    	
+    	LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateAllValues");
+    	
+        final long now = System.currentTimeMillis();
         long lowestTimeToCheck = Long.MAX_VALUE;
         for (int i = 0; i < this.getCount(); i++) {
             this.getItem(i).updateValues(now, getContext().getResources());

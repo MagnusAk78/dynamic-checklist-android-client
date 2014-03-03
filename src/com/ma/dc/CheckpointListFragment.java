@@ -1,7 +1,5 @@
 package com.ma.dc;
 
-import java.util.Date;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -174,7 +172,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
         myAdapter.clear();
 
-        Date now = new Date();
+        long now = System.currentTimeMillis();
         while (newCursor.moveToNext()) {
             CheckpointListViewObj clvo = new CheckpointListViewObj(
                     DbCheckpointHelper.createCheckpointCvFromDatabase(newCursor), now, this.getResources());

@@ -1,9 +1,8 @@
 package com.ma.dc;
 
 import java.util.Comparator;
-import java.util.Date;
+
 import com.ma.dc.database.DbCheckpointHelper;
-import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
 import android.content.ContentValues;
@@ -21,6 +20,13 @@ class CheckpointListViewObj {
 
     // Calculation objects
     private TimeCycle currentTimeCycle;
+    private TimeCycle nextTimeCycle;
+    private TimeCycle previousTimeCycle;
+    
+    private long lastMeasurementTime;
+    private long lastMeasurementValue;
+    
+    private int progressInPercent;
 
     // Compare values for sorting
     private long timeToNextRequriedCheck = 0;
@@ -32,7 +38,6 @@ class CheckpointListViewObj {
     private CheckStatus status;
     private CharSequence timeToNextCheckText;
 
-    private int progressInPercent;
     private boolean progressVisible = true;
 
     private final static long millisInSecond = 1000;
@@ -148,7 +153,7 @@ class CheckpointListViewObj {
         return sb.toString();
     }
 
-    CheckpointListViewObj(final ContentValues checkpointCv, final Date now, final Resources res) {
+    CheckpointListViewObj(final ContentValues checkpointCv, final long now, final Resources res) {
         this.checkpointCv = checkpointCv;
         titleText = DbCheckpointHelper.getOrderNr(checkpointCv) + ": " + DbCheckpointHelper.getName(checkpointCv);
         orderNr = DbCheckpointHelper.getOrderNr(checkpointCv);
@@ -162,6 +167,19 @@ class CheckpointListViewObj {
         updateFreqText = getUpdateFreqString(res, updates, timePeriod);
 
         currentTimeCycle = TimeCycle.createCurrentFromCheckpoint(updates, timePeriod, startTime, startDay, includeWeekends);
+        nextTimeCycle = currentTimeCycle.getNext();
+        previousTimeCycle = currentTimeCycle.getPrevious();
+        
+        Long lastMeasurementTimeLong = DbCheckpointHelper.getLatestMeasurementDate(checkpointCv);
+        if(lastMeasurementTimeLong != null) {
+        	lastMeasurementTime = lastMeasurementTimeLong.longValue();
+        }
+        
+        Integer lastMeasurementValueInteger = DbCheckpointHelper.getLatestMeasuredValue(checkpointCv);
+        if(lastMeasurementValueInteger != null) {
+        	lastMeasurementValue = lastMeasurementValueInteger.intValue();
+        }
+        
         updateValues(now, res);
     }
 
@@ -213,21 +231,25 @@ class CheckpointListViewObj {
         return progressVisible;
     }
 
-    void updateValues(final Date now, final Resources res) {        
+    void updateValues(final long now, final Resources res) {        
         enabled = Boolean.TRUE;
 
-        if (!currentTimeCycle.isWithin(now)) {
+        if (currentTimeCycle.isAfter(now)) {
             currentTimeCycle = currentTimeCycle.getNext();
+            nextTimeCycle = currentTimeCycle.getNext();
+            previousTimeCycle = currentTimeCycle.getPrevious();
         }
         
-    	Date latestMeasurementDate = currentTimeCycle.getPrevious().getStartDate();
-        Long latestMeasurementDateLong = DbCheckpointHelper.getLatestMeasurementDate(checkpointCv);       
-        if (latestMeasurementDateLong != null) {
-        	latestMeasurementDate.setTime(latestMeasurementDateLong.longValue());
+        Long lastMeasurementDateLong = DbCheckpointHelper.getLatestMeasurementDate(checkpointCv);       
+        if (lastMeasurementDateLong != null && lastMeasurementTime != lastMeasurementDateLong.longValue()) {
+        	lastMeasurementTime = lastMeasurementDateLong.longValue();
+        	Integer lastMeasurementValueInteger = DbCheckpointHelper.getLatestMeasuredValue(checkpointCv);
+        	if(lastMeasurementValueInteger != null) {
+        		lastMeasurementValue = lastMeasurementValueInteger.intValue();
+        	}
         }
 
-        Integer latestMeasurementValue = DbCheckpointHelper.getLatestMeasuredValue(checkpointCv);
-        if (latestMeasurementValue != null && latestMeasurementValue.intValue() == -1) {
+        if (lastMeasurementValue == -1) {
             lastValueOk = false;
             status = CheckStatus.OUT_OF_ORDER;
             progressVisible = false;
@@ -237,12 +259,10 @@ class CheckpointListViewObj {
             progressVisible = true;
         }
 
-        if (currentTimeCycle.isWithin(latestMeasurementDate)) {
+        if (currentTimeCycle.isWithin(lastMeasurementTime)) {
             // All is well, the progress bar should be empty
-        	
-        	LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateValues", "currentTimeCycle.isWithin(latestMeasurementDate)");
 
-            timeToNextRequriedCheck = currentTimeCycle.getNext().getEndDate().getTime() - latestMeasurementDate.getTime();
+            timeToNextRequriedCheck = nextTimeCycle.getEndDate() - lastMeasurementTime;
             timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);
 
             if (lastValueOk) {
@@ -250,29 +270,31 @@ class CheckpointListViewObj {
                 enabled = Boolean.FALSE;
             }
             progressInPercent = 0;
+            
             return;
         }
 
-        if (currentTimeCycle.getPrevious().isBefore(latestMeasurementDate)) {
+        if (previousTimeCycle.isBefore(lastMeasurementTime)) {
             // The horror, measurement was not done in previous cycle
 
-            final TimeCycle measuredTimeCycle = currentTimeCycle.transferToTime(latestMeasurementDate);
+            final TimeCycle measuredTimeCycle = currentTimeCycle.transferToTime(lastMeasurementTime);
 
-            timeToNextRequriedCheck = measuredTimeCycle.getNext().getEndDate().getTime() - now.getTime();
+            timeToNextRequriedCheck = measuredTimeCycle.getNext().getEndDate() - now;
             timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);
 
             if (lastValueOk) {
                 status = CheckStatus.ALARM;
             }
             progressInPercent = 100;
+            
             return;
         }
 
-        timeToNextRequriedCheck = currentTimeCycle.getEndDate().getTime() - now.getTime();
+        timeToNextRequriedCheck = currentTimeCycle.getEndDate() - now;
         timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);
 
         if (lastValueOk) {
-            progressInPercent = currentTimeCycle.getProgressBetween(now);
+            progressInPercent = currentTimeCycle.getProgressTowardsEndTimeInPercent(now);
         }
     }
 
