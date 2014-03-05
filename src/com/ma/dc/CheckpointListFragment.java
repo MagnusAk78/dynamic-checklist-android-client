@@ -47,12 +47,15 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
     private UpdateTask mUpdateTask = new UpdateTask();
 
     private class UpdateTask extends Thread implements Runnable {
+    	
         public void run() {
             LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "UpdateTask.run");
             myAdapter.updateAllValues();
             myAdapter.sort(CheckpointListViewObj.getComparator());
             myAdapter.notifyDataSetChanged();
-            mHandler.postDelayed(this, myAdapter.getProposedUpdateInterval());
+            long proposedUpdateInterval = myAdapter.getProposedUpdateInterval();
+            
+            mHandler.postDelayed(this, proposedUpdateInterval);
         }
     }
 
@@ -178,7 +181,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
                     DbCheckpointHelper.createCheckpointCvFromDatabase(newCursor), now, this.getResources());
             myAdapter.add(clvo);
         }
-        mHandler.postDelayed(mUpdateTask, 10);
+        mHandler.postDelayed(mUpdateTask, 100);
     }
 
     @Override

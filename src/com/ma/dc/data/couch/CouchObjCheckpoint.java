@@ -28,9 +28,6 @@ public class CouchObjCheckpoint extends CouchObjBase {
     @SerializedName("start_day")
     private Integer startDay;
     
-    @SerializedName("include_weekends")
-    private Boolean includeWeekends;
-    
     @SerializedName("order_nr")
     private Integer orderNr;
     
@@ -90,10 +87,6 @@ public class CouchObjCheckpoint extends CouchObjBase {
         return startDay;
     }
     
-    public Boolean getIncludeWeekends() {
-        return includeWeekends;
-    }
-    
     public Integer getOrderNr() {
         return orderNr;
     }
@@ -148,8 +141,6 @@ public class CouchObjCheckpoint extends CouchObjBase {
         sb.append(startTime);
         sb.append(", startDay: ");
         sb.append(startDay);
-        sb.append(", includeWeekends: ");
-        sb.append(includeWeekends);
         sb.append(", orderNr: ");
         sb.append(orderNr);
         sb.append(")");

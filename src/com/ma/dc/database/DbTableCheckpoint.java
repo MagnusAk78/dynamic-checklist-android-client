@@ -20,7 +20,6 @@ public final class DbTableCheckpoint {
     public static final String COLUMN_TIME_PERIOD = "checkpoint_key_time_period";
     public static final String COLUMN_START_TIME = "checkpoint_key_start_time";
     public static final String COLUMN_START_DAY = "checkpoint_key_start_day";
-    public static final String COLUMN_INCLUDE_WEEKENDS = "checkpoint_key_include_weekends";
     public static final String COLUMN_ORDER_NR = "checkpoint_key_order_nr";
     public static final String COLUMN_ERROR_TAG_1 = "checkpoint_key_error_tag_1";
     public static final String COLUMN_ERROR_TAG_2 = "checkpoint_key_error_tag_2";
@@ -45,7 +44,7 @@ public final class DbTableCheckpoint {
     		+ COLUMN_DESCRIPTION + " TEXT, " + COLUMN_ACTIVE + " INTEGER, " 
     		+ COLUMN_UPDATES + " INTEGER, " + COLUMN_TIME_PERIOD + " STRING, " 
     		+ COLUMN_START_TIME + " INTEGER, " + COLUMN_START_DAY + " INTEGER, " 
-    		+ COLUMN_INCLUDE_WEEKENDS + " INTEGER, " + COLUMN_ORDER_NR + " INTEGER, " 
+    		+ COLUMN_ORDER_NR + " INTEGER, " 
     		+ COLUMN_ERROR_TAG_1 + " TEXT, " + COLUMN_ERROR_TAG_2 + " TEXT, " 
     		+ COLUMN_ERROR_TAG_3 + " TEXT, " + COLUMN_ERROR_TAG_4 + " TEXT, " 
     		+ COLUMN_ACTION_TAG_1 + " TEXT, " + COLUMN_ACTION_TAG_2 + " TEXT, " 
@@ -58,7 +57,7 @@ public final class DbTableCheckpoint {
     public static String[] allColumns() {
         final String[] available = { COLUMN_ID, COLUMN_REV, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_ACTIVE,
         		COLUMN_UPDATES, COLUMN_TIME_PERIOD, COLUMN_START_TIME, COLUMN_START_DAY, 
-        		COLUMN_INCLUDE_WEEKENDS, COLUMN_ORDER_NR,COLUMN_ERROR_TAG_1, COLUMN_ERROR_TAG_2,
+        		COLUMN_ORDER_NR,COLUMN_ERROR_TAG_1, COLUMN_ERROR_TAG_2,
         		COLUMN_ERROR_TAG_3, COLUMN_ERROR_TAG_4, COLUMN_ACTION_TAG_1, COLUMN_ACTION_TAG_2,
         		COLUMN_ACTION_TAG_3, COLUMN_ACTION_TAG_4, COLUMN_IMAGE_FILENAME, COLUMN_IMAGE_SIZE, 
         		COLUMN_DOWNLOAD_IMAGE, COLUMN_LATEST_MEASUREMENT_DATE, COLUMN_LATEST_MEASUREMENT_VALUE, 

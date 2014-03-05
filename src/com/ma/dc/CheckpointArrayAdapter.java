@@ -69,6 +69,13 @@ public class CheckpointArrayAdapter extends ArrayAdapter<CheckpointListViewObj> 
         
         return convertView;
     }
+    
+    private final long TWO_MINUTES = 120000;
+    private final long ONE_HOUR = 3600000;
+    
+    private final long SHORT_UPDATE_INTERVAL = 350;
+    private final long MEDIUM_UPDATE_INTERVAL = 5000;
+    private final long LONG_UPDATE_INTERVAL = 10000;
 
     void updateAllValues() {
     	
@@ -77,16 +84,17 @@ public class CheckpointArrayAdapter extends ArrayAdapter<CheckpointListViewObj> 
         final long now = System.currentTimeMillis();
         long lowestTimeToCheck = Long.MAX_VALUE;
         for (int i = 0; i < this.getCount(); i++) {
-            this.getItem(i).updateValues(now, getContext().getResources());
-            lowestTimeToCheck = Math.min(lowestTimeToCheck, Math.abs(this.getItem(i).getTimeToNextRequriedCheck()));
+            long timeToNextRequriedCheck = this.getItem(i).updateValues(now, getContext().getResources());
+            lowestTimeToCheck = Math.min(lowestTimeToCheck, Math.abs(timeToNextRequriedCheck));
         }
 
-        if (lowestTimeToCheck < 120000) {
-            proposedUpdateInterval = 850;
-        } else if (lowestTimeToCheck < 3600000) {
-            proposedUpdateInterval = 5000;
+        if (lowestTimeToCheck < TWO_MINUTES) {
+            proposedUpdateInterval = SHORT_UPDATE_INTERVAL;
+        } else if (lowestTimeToCheck < ONE_HOUR) {
+            proposedUpdateInterval = MEDIUM_UPDATE_INTERVAL;
         } else {
-            proposedUpdateInterval = 10000;
+        	//if (lowestTimeToCheck > ONE_HOUR)
+            proposedUpdateInterval = LONG_UPDATE_INTERVAL;
         }
     }
 

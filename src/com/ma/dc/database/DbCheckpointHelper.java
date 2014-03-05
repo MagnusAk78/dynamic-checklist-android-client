@@ -42,7 +42,6 @@ public final class DbCheckpointHelper {
         cv.put(DbTableCheckpoint.COLUMN_TIME_PERIOD, checkpointCouchObject.getTimePeriod());
         cv.put(DbTableCheckpoint.COLUMN_START_TIME, checkpointCouchObject.getStartTime());
         cv.put(DbTableCheckpoint.COLUMN_START_DAY, checkpointCouchObject.getStartDay());
-        cv.put(DbTableCheckpoint.COLUMN_INCLUDE_WEEKENDS, checkpointCouchObject.getIncludeWeekends());
         cv.put(DbTableCheckpoint.COLUMN_ORDER_NR, checkpointCouchObject.getOrderNr());
         
         cv.put(DbTableCheckpoint.COLUMN_ERROR_TAG_1, checkpointCouchObject.getErrorTag1());
@@ -150,11 +149,7 @@ public final class DbCheckpointHelper {
     public static Integer getStartDay(final ContentValues checkpointCv) {
         return checkpointCv.getAsInteger(DbTableCheckpoint.COLUMN_START_DAY);
     }
-    
-    public static Boolean getIncludeWeekends(final ContentValues checkpointCv) {
-        return checkpointCv.getAsBoolean(DbTableCheckpoint.COLUMN_INCLUDE_WEEKENDS);
-    }
-    
+
     public static Integer getOrderNr(final ContentValues checkpointCv) {
         return checkpointCv.getAsInteger(DbTableCheckpoint.COLUMN_ORDER_NR);
     }

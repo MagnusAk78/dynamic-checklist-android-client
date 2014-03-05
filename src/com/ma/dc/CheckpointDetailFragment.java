@@ -44,7 +44,7 @@ public class CheckpointDetailFragment extends Fragment implements OnClickListene
     private ImageButton btnOkAfterAction;
     private ImageButton btnNotOk;
     
-    private CheckStatus checkOkEnabled = CheckStatus.TIME_TO_CHECK;
+    private CheckStatus checkpointStatus = CheckStatus.TIME_TO_CHECK;
     
     private TagChooser actionTagChooser;
     private TagChooser errorTagChooser;
@@ -107,14 +107,14 @@ public class CheckpointDetailFragment extends Fragment implements OnClickListene
             // to load content from a content provider.
 
             final String checkpointId = getArguments().getString(ARG_ITEM_ID);
-            checkOkEnabled = CheckStatus.getFromValue(getArguments().getInt(ARG_ITEM_CHECK_STATUS));
+            checkpointStatus = CheckStatus.getFromValue(getArguments().getInt(ARG_ITEM_CHECK_STATUS));
             
             LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onCreate", "checkpointId: " + checkpointId);
+            LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onCreate", "checkpointStatus: " + checkpointStatus);
             
             final Uri uriCheckpoint = Uri.parse(DcContentProvider.CHECKPOINTS_URI + "/" + checkpointId);
             Cursor data = this.getActivity().getContentResolver().query(uriCheckpoint, null, null, null, null);
             if(data.moveToFirst()) {
-                LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onCreate", "data.moveToFirst()");
                 checkpointCv = DbCheckpointHelper.createCheckpointCvFromDatabase(data);
             }
         }
@@ -165,12 +165,16 @@ public class CheckpointDetailFragment extends Fragment implements OnClickListene
         btnOkAfterAction.setOnClickListener(this);
         btnNotOk.setOnClickListener(this);
         
-        if(checkOkEnabled == CheckStatus.OUT_OF_ORDER) {            
+        if(checkpointStatus == CheckStatus.OUT_OF_ORDER) {            
             btnNotOk.setEnabled(false);
+        } else {
+        	btnNotOk.setEnabled(true);
         }
         
-        if(checkOkEnabled == CheckStatus.CHECK_OK) {            
-            btnOk.setEnabled(false);
+        if(checkpointStatus == CheckStatus.CHECK_OK) {
+        	btnOk.setEnabled(false);
+        } else {
+        	btnOk.setEnabled(true);
         }
 
         return rootView;
