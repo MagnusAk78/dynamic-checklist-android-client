@@ -283,14 +283,16 @@ class CheckpointListViewObj {
             // All is well, the progress bar should be empty
             status = CheckStatus.CHECK_OK;
             progressInPercent = 0;
+            
+            timeToNextRequriedCheck = nextTimeCycle.getEndDate() - now;
         } else {
         	LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateTimeValues", "default");
         
         	status = CheckStatus.TIME_TO_CHECK;
         	progressInPercent = currentTimeCycle.getProgressTowardsEndTimeInPercent(now);
+        	
+        	timeToNextRequriedCheck = currentTimeCycle.getEndDate() - now;
         }
-        
-        timeToNextRequriedCheck = nextTimeCycle.getEndDate() - now;
     }
     
     private void updateTextValues(final Resources res) {       

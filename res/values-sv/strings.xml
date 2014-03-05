@@ -25,6 +25,7 @@
     
     <string name="upload_data_not_ok_toast">Problem att skicka nya värden till servern!</string>
     <string name="update_checkpoints_not_ok_toast">Problem att hämta data från servern!</string>
+    <string name="download_images_not_ok_toast">Problem att hämta bilder från servern!</string>
     
     <string name="checkpoint_detail_OK_btn">OK</string>
     <string name="checkpoint_detail_OK_after_action_btn">OK efter åtgärd</string>
