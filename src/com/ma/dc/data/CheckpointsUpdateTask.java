@@ -3,25 +3,21 @@ package com.ma.dc.data;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.ma.dc.Common;
 import com.ma.dc.SettingsFragment;
-import com.ma.dc.contentprovider.DcContentProvider;
 import com.ma.dc.data.couch.CouchObjCheckpoint;
 import com.ma.dc.data.couch.CouchObjMeasurement;
 import com.ma.dc.data.couch.CouchViewResultKeyArray;
+import com.ma.dc.database.CheckpointObject;
 import com.ma.dc.database.DbCheckpointHelper;
 import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
@@ -36,7 +32,7 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
     private ProgressDialog pd;
     private final Context context;
     private final CheckpointsUpdateTaskCallback checkpointsUpdateTaskCallback;
-    
+
     private ConcurrentHashMap<String, Boolean> fileDownloadCheckMap = new ConcurrentHashMap<String, Boolean>();
 
     CheckpointsUpdateTask(final Context context, final CheckpointsUpdateTaskCallback checkpointsUpdateTaskCallback) {
@@ -54,7 +50,7 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
     @Override
     protected Boolean doInBackground(Void... params) {
         LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "doInBackground");
-        
+
         final String jsonData = getRawDataFromCheckpointsView();
         if (jsonData == null) {
             return Boolean.FALSE;
@@ -66,29 +62,30 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
             LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "doInBackground", "checkpointList == null");
             return Boolean.FALSE;
         }
-        
-        Map<CouchObjCheckpoint, CouchObjMeasurement> checkpointMeasurementMap = null;
+
+        final List<CheckpointObject> checkpointDatabaseList = DbCheckpointHelper.getAllCheckpointsInDatabase(context
+                .getContentResolver());
+
         if (checkpointList.size() > 0) {
-            checkpointMeasurementMap = new HashMap<CouchObjCheckpoint, CouchObjMeasurement>(checkpointList.size());
-            getLatestMeasurementForEachCheckpoint(checkpointList, checkpointMeasurementMap);
+            if (checkpointDatabaseList.size() > 0) {
+                removeAllCheckpointsNoLongerOnServer(checkpointList, checkpointDatabaseList);
+            }
+            final int updated = saveTheNewDataToDatabase(checkpointList, checkpointDatabaseList);
+            LogHelper
+                    .logDebug(UploadMeasurementsTask.class.getName(), "doInBackground", "database changed: " + updated);
         }
 
-        final List<ContentValues> checkpointDatabaseList = getAllCheckpointsInDatabase();
-
-        if (checkpointList.size() > 0 && checkpointDatabaseList.size() > 0) {
-            removeAllCheckpointsNoLongerOnServer(checkpointList, checkpointDatabaseList);
+        try {
+            getLatestMeasurementForEachCheckpoint(DbCheckpointHelper.getAllCheckpointsInDatabase(context
+                    .getContentResolver()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Boolean.FALSE;
         }
-
-        boolean changed = false;
-        if (checkpointList.size() > 0) {
-            changed = saveTheNewDataToDatabase(checkpointList, checkpointMeasurementMap);
-        }
-
-        LogHelper.logDebug(UploadMeasurementsTask.class.getName(), "doInBackground", "database changed: " + changed);
 
         return Boolean.TRUE;
     }
-    
+
     @Override
     public void downloadDone(String url, boolean statusOk, String failureMessage) {
         fileDownloadCheckMap.put(url, Boolean.TRUE);
@@ -115,63 +112,43 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
         pd.show();
     }
 
-    private List<ContentValues> getAllCheckpointsInDatabase() {
-        final Cursor checkpointsCursor = context.getContentResolver().query(DcContentProvider.CHECKPOINTS_URI, null,
-                null, null, null);
-        final ArrayList<ContentValues> checkpointsFromDatabase = new ArrayList<ContentValues>(
-                checkpointsCursor.getCount());
-        while (checkpointsCursor.moveToNext()) {
-            checkpointsFromDatabase.add(DbCheckpointHelper.createCheckpointCvFromDatabase(checkpointsCursor));
-        }
-        checkpointsCursor.close();
-        return checkpointsFromDatabase;
-    }
+    private CouchObjMeasurement getLatestMeasurement(final String checkpointId) throws MalformedURLException,
+            IOException, JsonSyntaxException {
 
-    private CouchObjMeasurement getLatestMeasurement(String checkpointId) {
+        final String cloudantName = SettingsFragment.getCloudantName(context);
+        final String databaseName = SettingsFragment.getDatabaseName(context);
 
-		final String cloudantName = SettingsFragment.getCloudantName(context);
-		final String databaseName = SettingsFragment.getDatabaseName(context);
-		
-		final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
-        
-        String fullUrl = baseUrl + Common.MEASUREMENTS_VIEW_END + "?startkey=[\"" + checkpointId + "\",{}]&endkey=[\""
-                + checkpointId + "\"]&descending=true&limit=1";
+        final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
 
-        String jsonData = null;
-        try {
-            jsonData = ConnectionUtils.getJsonDataFromUrl(fullUrl, 10000);
-        } catch (Exception e) {
-            LogHelper.logWarning(this, Common.LOG_TAG_NETWORK, "getLatestMeasurement", e);
-        }
-        if (jsonData == null) {
-            return null;
-        }
+        final String fullUrl = baseUrl + Common.MEASUREMENTS_VIEW_END + "?startkey=[\"" + checkpointId
+                + "\",{}]&endkey=[\"" + checkpointId + "\"]&descending=true&limit=1";
 
-        CouchViewResultKeyArray mv;
+        final String jsonData = ConnectionUtils.getJsonDataFromUrl(fullUrl, 4000);
+
+        final CouchViewResultKeyArray mv;
 
         mv = gson.fromJson(jsonData, CouchViewResultKeyArray.class);
-        if (mv.getNumberOfRows() == 0) {
+        if (mv.getNumberOfRows() != 1) {
             return null;
         }
-        List<JsonObject> jsonList = new ArrayList<JsonObject>();
+
+        List<JsonObject> jsonList = new ArrayList<JsonObject>(1);
         mv.populateListFromRows(jsonList);
 
-        for (JsonObject json : jsonList) {
-            CouchObjMeasurement latestMeasurement = gson.fromJson(json, CouchObjMeasurement.class);
-
-            if (latestMeasurement != null) {
-                return latestMeasurement;
-            }
+        if (jsonList.size() != 1) {
+            return null;
         }
-        return null;
+
+        return gson.fromJson(jsonList.get(0), CouchObjMeasurement.class);
     }
 
-    private void getLatestMeasurementForEachCheckpoint(final List<CouchObjCheckpoint> checkpointList,
-            Map<CouchObjCheckpoint, CouchObjMeasurement> checkpointMeasurementMap) {
-        for (CouchObjCheckpoint checkpoint : checkpointList) {
-            final CouchObjMeasurement measurement = getLatestMeasurement(checkpoint.getId());
-            if (measurement != null) {
-                checkpointMeasurementMap.put(checkpoint, measurement);
+    private void getLatestMeasurementForEachCheckpoint(final List<CheckpointObject> checkpointList)
+            throws JsonSyntaxException, MalformedURLException, IOException {
+        for (CheckpointObject checkpoint : checkpointList) {
+            final CouchObjMeasurement measurementObj = getLatestMeasurement(checkpoint.getStringId());
+            if (measurementObj != null) {
+                checkpoint.updateLatestMeasurement(context.getContentResolver(), measurementObj.getDate(),
+                        measurementObj.getValue());
             }
         }
     }
@@ -179,16 +156,18 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
     private String getRawDataFromCheckpointsView() {
         LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView");
         try {
-    		final String cloudantName = SettingsFragment.getCloudantName(context);
-    		final String databaseName = SettingsFragment.getDatabaseName(context);
-    		
-    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: " + cloudantName);
-    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: " + databaseName);
-    		
-    		final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
-    		
-    		LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "baseUrl: " + baseUrl);
-            
+            final String cloudantName = SettingsFragment.getCloudantName(context);
+            final String databaseName = SettingsFragment.getDatabaseName(context);
+
+            LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: "
+                    + cloudantName);
+            LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "cloudantName: "
+                    + databaseName);
+
+            final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
+
+            LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", "baseUrl: " + baseUrl);
+
             return ConnectionUtils.getJsonDataFromUrl(baseUrl + Common.CHECKPOINTS_VIEW_END, 10000);
         } catch (MalformedURLException e) {
             LogHelper.logWarning(this, Common.LOG_TAG_NETWORK, "getRawDataFromCheckpointsView", e);
@@ -204,7 +183,7 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
 
     private List<CouchObjCheckpoint> parseCheckpointsJsonToObjects(final String jsonData) {
         LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "parseCheckpointsJsonToObjects");
-        
+
         CouchViewResultKeyArray checkpointsView = null;
         try {
             checkpointsView = gson.fromJson(jsonData, CouchViewResultKeyArray.class);
@@ -227,7 +206,8 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
             try {
                 final CouchObjCheckpoint checkpoint = gson.fromJson(json, CouchObjCheckpoint.class);
                 checkpointList.add(checkpoint);
-                LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "parseCheckpointsJsonToObjects", checkpoint.getName() + " added!");
+                LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "parseCheckpointsJsonToObjects", checkpoint.getName()
+                        + " added!");
             } catch (JsonSyntaxException e) {
                 LogHelper.logWarning(this, Common.LOG_TAG_NETWORK, "parseCheckpointsJsonToObjects", e);
                 return null;
@@ -237,46 +217,47 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
         return checkpointList;
     }
 
-    private void removeAllCheckpointsNoLongerOnServer(final List<CouchObjCheckpoint> checkpointList,
-            final List<ContentValues> checkpointDatabaseList) {
-        for (ContentValues checkpointCv : checkpointDatabaseList) {
-            if(!couchObjCheckpointListContainsId(checkpointList, DbCheckpointHelper.getId(checkpointCv))) {
-                DbCheckpointHelper.removeFromDb(context, context.getContentResolver(), checkpointCv);
+    private int removeAllCheckpointsNoLongerOnServer(final List<CouchObjCheckpoint> checkpointList,
+            final List<CheckpointObject> checkpointDatabaseList) {
+        int nrRemoved = 0;
+        for (CheckpointObject checkpointObject : checkpointDatabaseList) {
+            if (!couchObjCheckpointListContainsId(checkpointList, checkpointObject.getStringId())) {
+                nrRemoved += checkpointObject.deleteFromDatabase(context);
             }
         }
+
+        return nrRemoved;
     }
-    
-    private boolean couchObjCheckpointListContainsId(final List<CouchObjCheckpoint> checkpointList, final String id) {
+
+    private boolean couchObjCheckpointListContainsId(final List<CouchObjCheckpoint> checkpointList,
+            final String stringId) {
         for (CouchObjCheckpoint checkpointObj : checkpointList) {
-            if(checkpointObj.getId().compareTo(id) == 0) {
+            if (checkpointObj.getId().compareTo(stringId) == 0) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean saveTheNewDataToDatabase(final List<CouchObjCheckpoint> checkpointList,
-            final Map<CouchObjCheckpoint, CouchObjMeasurement> checkpointMeasurementMap) {
-    	
-        boolean changed = false;
-        for (CouchObjCheckpoint checkpoint : checkpointList) {
-        	//Compare revision to database, only create a new if different
-        	
-            final Cursor checkpointsCursor = context.getContentResolver().query(DbCheckpointHelper.getUrlOne(checkpoint.getId()), null,
-                    null, null, null);
-            ContentValues cvCheckpointDatabase = null;
-            if (checkpointsCursor.moveToFirst()) {
-            	cvCheckpointDatabase = DbCheckpointHelper.createCheckpointCvFromDatabase(checkpointsCursor);
+    private CheckpointObject findCheckpointObjectWithStringId(final List<CheckpointObject> checkpointList,
+            final String stringId) {
+        for (CheckpointObject checkpointObject : checkpointList) {
+            if (checkpointObject.getStringId().compareTo(stringId) == 0) {
+                return checkpointObject;
             }
-            checkpointsCursor.close();
-            
-            LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "saveTheNewDataToDatabase", checkpoint.toString());
-        	
-            final ContentValues checkpointCv = DbCheckpointHelper.createCheckpointCvFromNetwork(checkpoint, cvCheckpointDatabase);
-            DbCheckpointHelper.addMeasurement(checkpointCv, checkpointMeasurementMap.get(checkpoint));
-            DbCheckpointHelper.setLatestMeasuredSynced(Boolean.TRUE, checkpointCv);
-            changed = DbCheckpointHelper.syncWithDatabase(context.getContentResolver(), checkpointCv) || changed;
         }
-        return changed;
+        return null;
+    }
+
+    private int saveTheNewDataToDatabase(final List<CouchObjCheckpoint> checkpointList,
+            List<CheckpointObject> checkpointDatabaseList) {
+        int updated = 0;
+        for (CouchObjCheckpoint checkpoint : checkpointList) {
+            final CheckpointObject oldVersion = findCheckpointObjectWithStringId(checkpointDatabaseList,
+                    checkpoint.getId());
+            updated += DbCheckpointHelper.storeCheckpointFromNetwork(context.getContentResolver(), checkpoint,
+                    oldVersion);
+        }
+        return updated;
     }
 }

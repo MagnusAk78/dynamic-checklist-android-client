@@ -8,9 +8,9 @@ enum CheckStatus {
     private CheckStatus(int value) {
         this.value = value;
     }
-    
+
     static CheckStatus getFromValue(int value) {
-        switch(value) {
+        switch (value) {
         case 1:
             return CHECK_OK;
         case 2:
@@ -20,11 +20,11 @@ enum CheckStatus {
         case 4:
             return ALARM;
         }
-        
-        //default value
+
+        // default value
         return TIME_TO_CHECK;
     }
-    
+
     int getValue() {
         return value;
     }

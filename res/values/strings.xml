@@ -32,7 +32,7 @@
     <string name="checkpoint_detail_Not_OK_btn">Not OK</string>
     
     <string name="checkpoint_row_time_to_next_check_text">Check</string>
-    <string name="checkpoint_row_update_frequency_text">Every</string>
+    <string name="checkpoint_row_update_frequency_text">every</string>
     <string name="checkpoint_row_title">title</string>
     <string name="checkpoint_row_progress_image_description">Image showing how critical a new check is needed</string>
     

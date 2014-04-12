@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="14"
-        android:targetSdkVersion="18" />
+        android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -35,8 +35,8 @@
             android:name="com.ma.dc.SettingsActivity"
             android:label="@string/action_settings"/>
         <provider
-      		android:name=".contentprovider.DcContentProvider"
-      		android:authorities="com.ma.dc.contentprovider"
+      		android:name="com.ma.dc.database.DcContentProvider"
+      		android:authorities="com.ma.dc.database"
       		android:exported="false" >
    		</provider>
     </application>

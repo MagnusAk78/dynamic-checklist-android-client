@@ -6,17 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import com.google.gson.Gson;
 import com.ma.dc.Common;
 import com.ma.dc.SettingsFragment;
-import com.ma.dc.contentprovider.DcContentProvider;
 import com.ma.dc.data.couch.CouchObjMeasurement;
-import com.ma.dc.database.DbCheckpointHelper;
-import com.ma.dc.database.DbTableCheckpoint;
+import com.ma.dc.database.DcContentProvider;
+import com.ma.dc.database.MeasurementObject;
 import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
@@ -45,11 +43,14 @@ final class UploadMeasurementsTask extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected Boolean doInBackground(Void... states) {
 
-        final List<ContentValues> checkpointsWithNewMeasurementValues = getAllCheckpointsWithNewMeasurementValuesFromDatabase();
+        final List<MeasurementObject> allMeasurementNotSentToServer = getAllMeasurementNotSentToServer();
+
+        LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "doInBackground", "allMeasurementNotSentToServer.size:"
+                + allMeasurementNotSentToServer.size());
 
         boolean returnValue = Boolean.TRUE;
-        if (checkpointsWithNewMeasurementValues.size() > 0) {
-            returnValue = sendNewMeasurementsToServer(checkpointsWithNewMeasurementValues);
+        if (allMeasurementNotSentToServer.size() > 0) {
+            returnValue = sendNewMeasurementsToServer(allMeasurementNotSentToServer);
         }
 
         return returnValue;
@@ -76,32 +77,31 @@ final class UploadMeasurementsTask extends AsyncTask<Void, Void, Boolean> {
         pd.show();
     }
 
-    private List<ContentValues> getAllCheckpointsWithNewMeasurementValuesFromDatabase() {
-        final String selection = DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_SYNCED + " = ?";
-        final String[] selectionArgs = new String[] { "0" };
+    private List<MeasurementObject> getAllMeasurementNotSentToServer() {
+        LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "getAllMeasurementNotSentToServer");
 
-        final Cursor unsyncedCheckpointsCursor = context.getContentResolver().query(DcContentProvider.CHECKPOINTS_URI,
-                null, selection, selectionArgs, null);
+        final Cursor unsyncedMeasurementsCursor = context.getContentResolver().query(
+                DcContentProvider.MEASUREMENTS_URI, MeasurementObject.PROJECTION, null, null, null);
 
-        final List<ContentValues> checkpointsWithNewMeasurementValues = new ArrayList<ContentValues>(
-                unsyncedCheckpointsCursor.getCount());
-        while (unsyncedCheckpointsCursor.moveToNext()) {
-            checkpointsWithNewMeasurementValues.add(DbCheckpointHelper.createCheckpointCvFromDatabase(unsyncedCheckpointsCursor));
+        final List<MeasurementObject> measurementsNotSentToServer = new ArrayList<MeasurementObject>(
+                unsyncedMeasurementsCursor.getCount());
+        while (unsyncedMeasurementsCursor.moveToNext()) {
+            measurementsNotSentToServer.add(new MeasurementObject(unsyncedMeasurementsCursor));
         }
 
-        unsyncedCheckpointsCursor.close();
-        return checkpointsWithNewMeasurementValues;
+        unsyncedMeasurementsCursor.close();
+        return measurementsNotSentToServer;
     }
 
     private Boolean sendMeasurementToServer(final CouchObjMeasurement measurement) {
         final String jsonValue = gson.toJson(measurement);
 
         LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "sendMeasurement", "jsonValue: " + jsonValue);
-        
-		final String cloudantName = SettingsFragment.getCloudantName(context);
-		final String databaseName = SettingsFragment.getDatabaseName(context);
-		
-		final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
+
+        final String cloudantName = SettingsFragment.getCloudantName(context);
+        final String databaseName = SettingsFragment.getDatabaseName(context);
+
+        final String baseUrl = Common.HTTP_STRING + cloudantName + Common.CLOUDANT_END + "/" + databaseName;
 
         try {
             final int result = ConnectionUtils.postJsonDataToUrl(baseUrl, 10000, jsonValue);
@@ -119,12 +119,11 @@ final class UploadMeasurementsTask extends AsyncTask<Void, Void, Boolean> {
         return Boolean.FALSE;
     }
 
-    private Boolean sendNewMeasurementsToServer(final List<ContentValues> checkpointsWithNewMeasurementValues) {
+    private Boolean sendNewMeasurementsToServer(final List<MeasurementObject> measurementsNotSentToServer) {
         boolean allSent = Boolean.TRUE;
-        for (ContentValues checkpointCv : checkpointsWithNewMeasurementValues) {
-            if (sendMeasurementToServer(DbCheckpointHelper.createCouchObjMeasurement(checkpointCv))) {
-                DbCheckpointHelper.setLatestMeasuredSynced(Boolean.TRUE, checkpointCv);
-                DbCheckpointHelper.syncWithDatabase(context.getContentResolver(), checkpointCv);
+        for (MeasurementObject measurementObject : measurementsNotSentToServer) {
+            if (sendMeasurementToServer(measurementObject.createCouchObjMeasurement())) {
+                measurementObject.deleteFromDatabase(context.getContentResolver());
             } else {
                 allSent = Boolean.FALSE;
             }

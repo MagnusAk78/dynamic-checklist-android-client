@@ -13,11 +13,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
 
-import com.ma.dc.contentprovider.DcContentProvider;
 import com.ma.dc.data.FullUpdater;
-import com.ma.dc.database.DbCheckpointHelper;
+import com.ma.dc.database.CheckpointListObject;
+import com.ma.dc.database.DcContentProvider;
 import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
@@ -42,19 +44,24 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
          * Callback for when an item has been selected.
          */
         public void onItemSelected(CheckpointListViewObj checkpointObj);
+
+        /**
+         * Callback for long clicks
+         */
+        public void onItemLongClick(CheckpointListViewObj checkpointObj);
     }
 
     private UpdateTask mUpdateTask = new UpdateTask();
 
     private class UpdateTask extends Thread implements Runnable {
-    	
+
         public void run() {
             LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "UpdateTask.run");
             myAdapter.updateAllValues();
             myAdapter.sort(CheckpointListViewObj.getComparator());
             myAdapter.notifyDataSetChanged();
             long proposedUpdateInterval = myAdapter.getProposedUpdateInterval();
-            
+
             mHandler.postDelayed(this, proposedUpdateInterval);
         }
     }
@@ -83,6 +90,9 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
     private static Callbacks sDummyCallbacks = new Callbacks() {
         @Override
         public void onItemSelected(CheckpointListViewObj checkpointObj) {
+        }
+
+        public void onItemLongClick(CheckpointListViewObj checkpointObj) {
         }
     };
 
@@ -126,6 +136,20 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
     }
 
     @Override
+    public void onActivityCreated(Bundle savedState) {
+        super.onActivityCreated(savedState);
+
+        this.getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
+                mCallbacks.onItemLongClick(myAdapter.getItem(pos));
+                return true;
+            }
+        });
+
+        this.getListView().setLongClickable(true);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -134,9 +158,8 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-        CursorLoader cursorLoader = new CursorLoader(this.getActivity(), DcContentProvider.CHECKPOINTS_URI, null,
+        return new CursorLoader(this.getActivity(), DcContentProvider.CHECKPOINTS_URI, CheckpointListObject.PROJECTION,
                 null, null, null);
-        return cursorLoader;
     }
 
     @Override
@@ -157,7 +180,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
     public void onListItemClick(ListView listView, View view, int position, long id) {
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onListItemClick");
         super.onListItemClick(listView, view, position, id);
-        
+
         mCallbacks.onItemSelected(myAdapter.getItem(position));
     }
 
@@ -177,8 +200,8 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
         long now = System.currentTimeMillis();
         while (newCursor.moveToNext()) {
-            CheckpointListViewObj clvo = new CheckpointListViewObj(
-                    DbCheckpointHelper.createCheckpointCvFromDatabase(newCursor), now, this.getResources());
+            CheckpointListViewObj clvo = new CheckpointListViewObj(new CheckpointListObject(newCursor), now,
+                    this.getResources());
             myAdapter.add(clvo);
         }
         mHandler.postDelayed(mUpdateTask, 100);
@@ -195,7 +218,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
             return true;
         case R.id.action_settings:
             LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onOptionsItemSelected", "action_settings pressed");
-            
+
             final Intent intent = new Intent(this.getActivity(), SettingsActivity.class);
             this.startActivity(intent);
             return true;

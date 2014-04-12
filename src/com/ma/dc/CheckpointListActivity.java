@@ -1,6 +1,5 @@
 package com.ma.dc;
 
-import com.ma.dc.database.DbCheckpointHelper;
 import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
@@ -12,6 +11,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.widget.Toast;
 
 /**
  * An activity representing a list of Checkpoints. This activity has different
@@ -60,35 +60,31 @@ public class CheckpointListActivity extends FragmentActivity implements Checkpoi
         }
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-        
+
         Common.listActivity = this;
     }
-    
-    
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        
+
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onConfigurationChanged");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onDestroy");
     }
-
-
 
     /**
      * Callback method from {@link CheckpointListFragment.Callbacks} indicating
      * that the item with the given ID was selected.
      */
     @Override
-    public void onItemSelected(CheckpointListViewObj checkpointObj) {
-        String checkpointId = DbCheckpointHelper.getId(checkpointObj.getCheckpointContentValues());
+    public void onItemSelected(CheckpointListViewObj checkpointListViewObj) {
+        long checkpointId = checkpointListViewObj.getCheckpointListObject().getId();
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onItemSelected", "id: " + checkpointId);
 
         if (mTwoPane) {
@@ -96,8 +92,9 @@ public class CheckpointListActivity extends FragmentActivity implements Checkpoi
             // adding or replacing the detail fragment using a
             // fragment transaction.
             final Bundle arguments = new Bundle();
-            arguments.putString(CheckpointDetailFragment.ARG_ITEM_ID, checkpointId);
-            arguments.putInt(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS, checkpointObj.getCheckStatusValue());
+            arguments.putLong(CheckpointDetailFragment.ARG_ITEM_ID, checkpointId);
+            arguments.putInt(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS,
+                    checkpointListViewObj.getCheckStatusValue());
             CheckpointDetailFragment fragment = new CheckpointDetailFragment();
             fragment.setArguments(arguments);
 
@@ -113,21 +110,34 @@ public class CheckpointListActivity extends FragmentActivity implements Checkpoi
             // for the selected item ID.
             Intent detailIntent = new Intent(this, CheckpointDetailActivity.class);
             detailIntent.putExtra(CheckpointDetailFragment.ARG_ITEM_ID, checkpointId);
-            detailIntent.putExtra(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS, checkpointObj.getCheckStatusValue());
+            detailIntent.putExtra(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS,
+                    checkpointListViewObj.getCheckStatusValue());
             startActivity(detailIntent);
+        }
+    }
+
+    public void onItemLongClick(CheckpointListViewObj checkpointListViewObj) {
+        long checkpointId = checkpointListViewObj.getCheckpointListObject().getId();
+        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onItemSelected", "id: " + checkpointId);
+
+        if (mTwoPane) {
+            Toast.makeText(this, "Twopane: true, Checkpoint: " + checkpointId, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Twopane: false, Checkpoint: " + checkpointId, Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     public void onCheckpointDetailDone(CheckpointDetailFragment detailFragment) {
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onCheckpointDetailDone");
-        
-        final Fragment activeDetailFragment = getSupportFragmentManager().findFragmentById(R.id.checkpoint_detail_container);
-        
+
+        final Fragment activeDetailFragment = getSupportFragmentManager().findFragmentById(
+                R.id.checkpoint_detail_container);
+
         final FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.detach(activeDetailFragment);
         fragmentTransaction.commit();
-        
+
         clearListViewChoices();
     }
 

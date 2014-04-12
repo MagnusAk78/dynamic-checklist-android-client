@@ -18,8 +18,7 @@ import android.view.MenuItem;
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link CheckpointDetailFragment}.
  */
-public class CheckpointDetailActivity extends FragmentActivity 
-    implements CheckpointDetailFragment.Callbacks {
+public class CheckpointDetailActivity extends FragmentActivity implements CheckpointDetailFragment.Callbacks {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +41,8 @@ public class CheckpointDetailActivity extends FragmentActivity
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(CheckpointDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(CheckpointDetailFragment.ARG_ITEM_ID));
+            arguments.putLong(CheckpointDetailFragment.ARG_ITEM_ID,
+                    getIntent().getLongExtra(CheckpointDetailFragment.ARG_ITEM_ID, -1));
             arguments.putInt(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS,
                     getIntent().getIntExtra(CheckpointDetailFragment.ARG_ITEM_CHECK_STATUS, 1));
             CheckpointDetailFragment fragment = new CheckpointDetailFragment();
@@ -68,7 +67,7 @@ public class CheckpointDetailActivity extends FragmentActivity
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     @Override
     public void onBackPressed() {
         NavUtils.navigateUpTo(this, new Intent(this, CheckpointListActivity.class));
@@ -77,7 +76,7 @@ public class CheckpointDetailActivity extends FragmentActivity
     @Override
     public void onCheckpointDetailDone(CheckpointDetailFragment detailFragment) {
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onCheckpointDetailDone");
-        
+
         NavUtils.navigateUpTo(this, new Intent(this, CheckpointListActivity.class));
     }
 }

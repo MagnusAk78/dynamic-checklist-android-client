@@ -1,14 +1,14 @@
 package com.ma.dc.data;
 
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.view.Gravity;
 import android.widget.Toast;
 
-import com.ma.dc.data.couch.CouchObjMeasurement;
-import com.ma.dc.database.DbCheckpointHelper;
+import com.ma.dc.database.NewMeasurementObject;
+import com.ma.dc.util.LogHelper;
+import com.ma.dc.Common;
 import com.ma.dc.R;
 
 public class InsertNewMeasurementTask extends AsyncTask<Void, Void, Boolean> {
@@ -20,27 +20,28 @@ public class InsertNewMeasurementTask extends AsyncTask<Void, Void, Boolean> {
     private ProgressDialog pd;
 
     private final Context mApplicationContext;
-    private final ContentValues checkpointCv;
-    private final int value;
-    private final String tag;
-
     private final InsertMeasurementCallback mCallback;
+    private final NewMeasurementObject newMeasurementObject;
 
     public InsertNewMeasurementTask(final InsertMeasurementCallback callback, final Context context,
-            final ContentValues checkpointCv, final int value, final String tag) {
+            final NewMeasurementObject newMeasurementObject) {
+        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "InsertNewMeasurementTask");
+
         this.mCallback = callback;
         this.mApplicationContext = context.getApplicationContext();
-        this.checkpointCv = checkpointCv;
-        this.value = value;
-        this.tag = tag;
+        this.newMeasurementObject = newMeasurementObject;
     }
 
     @Override
     protected Boolean doInBackground(Void... params) {
-        final CouchObjMeasurement measurement = new CouchObjMeasurement(DbCheckpointHelper.getId(checkpointCv), value, tag);
-        DbCheckpointHelper.addMeasurement(checkpointCv, measurement);
-        DbCheckpointHelper.setLatestMeasuredSynced(Boolean.FALSE, checkpointCv);
-        return DbCheckpointHelper.syncWithDatabase(mApplicationContext.getContentResolver(), checkpointCv);
+        try {
+            newMeasurementObject.storeToDatabase(mApplicationContext.getContentResolver());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -50,12 +51,13 @@ public class InsertNewMeasurementTask extends AsyncTask<Void, Void, Boolean> {
         }
         Toast toast = null;
         if (result.booleanValue()) {
-            switch(value) {
+            switch (newMeasurementObject.getValue()) {
             case 1:
                 toast = Toast.makeText(mApplicationContext, R.string.check_done_check_ok, Toast.LENGTH_LONG);
                 break;
             case 0:
-                toast = Toast.makeText(mApplicationContext, R.string.check_done_check_ok_after_action, Toast.LENGTH_LONG);
+                toast = Toast.makeText(mApplicationContext, R.string.check_done_check_ok_after_action,
+                        Toast.LENGTH_LONG);
                 break;
             case -1:
                 toast = Toast.makeText(mApplicationContext, R.string.check_done_check_not_ok, Toast.LENGTH_LONG);
@@ -64,8 +66,8 @@ public class InsertNewMeasurementTask extends AsyncTask<Void, Void, Boolean> {
         } else {
             toast = Toast.makeText(mApplicationContext, R.string.check_done_problem, Toast.LENGTH_LONG);
         }
-        
-        if(toast != null) {
+
+        if (toast != null) {
             toast.setGravity(Gravity.CENTER, 0, 0);
             toast.show();
         }

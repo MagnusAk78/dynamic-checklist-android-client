@@ -12,22 +12,13 @@ public class CouchObjMeasurement extends CouchObjBase {
 
     @SerializedName("value")
     private Integer value;
-    
+
     @SerializedName("tag")
     private String tag;
-    
+
     @SerializedName("date")
     private Long date;
 
-    public CouchObjMeasurement(final String checkpointId, final int value, final String tag) {
-        this.type_of_obj = "measurement";
-        this.value = value;
-        this.date = System.currentTimeMillis();
-        this.checkpointId = checkpointId;
-        this.tag = tag;
-    }
-
-    // This is when sending previously stored data to server
     public CouchObjMeasurement(final String checkpointId, final int value, final String tag, final long timestamp) {
         this.type_of_obj = "measurement";
         this.value = value;
@@ -51,7 +42,7 @@ public class CouchObjMeasurement extends CouchObjBase {
     public Integer getValue() {
         return value;
     }
-    
+
     public String getTag() {
         return tag;
     }
