@@ -16,17 +16,14 @@ public class CouchObjCheckpoint extends CouchObjBase {
     @SerializedName("active")
     private Boolean active;
 
-    @SerializedName("updates")
-    private Integer updates;
+    @SerializedName("time_days")
+    private Integer timeDays;
 
-    @SerializedName("time_period")
-    private String timePeriod;
+    @SerializedName("time_hours")
+    private String timeHours;
 
-    @SerializedName("start_time")
-    private Integer startTime;
-
-    @SerializedName("start_day")
-    private Integer startDay;
+    @SerializedName("exclude_weekends")
+    private Boolean excludeWeekends;
 
     @SerializedName("order_nr")
     private Integer orderNr;
@@ -71,20 +68,16 @@ public class CouchObjCheckpoint extends CouchObjBase {
         return active;
     }
 
-    public Integer getUpdates() {
-        return updates;
+    public Integer getTimeDays() {
+        return timeDays;
     }
 
-    public String getTimePeriod() {
-        return timePeriod;
+    public String getTimeHours() {
+        return timeHours;
     }
 
-    public Integer getStartTime() {
-        return startTime;
-    }
-
-    public Integer getStartDay() {
-        return startDay;
+    public Boolean getExcludeWeekends() {
+        return excludeWeekends;
     }
 
     public Integer getOrderNr() {
@@ -133,14 +126,12 @@ public class CouchObjCheckpoint extends CouchObjBase {
         sb.append(description);
         sb.append(", active: ");
         sb.append(active);
-        sb.append(", updates: ");
-        sb.append(updates);
-        sb.append(", timePeriod: ");
-        sb.append(timePeriod);
-        sb.append(", startTime: ");
-        sb.append(startTime);
-        sb.append(", startDay: ");
-        sb.append(startDay);
+        sb.append(", timeDays: ");
+        sb.append(timeDays);
+        sb.append(", timeHours: ");
+        sb.append(timeHours);
+        sb.append(", excludeWeekends: ");
+        sb.append(excludeWeekends);
         sb.append(", orderNr: ");
         sb.append(orderNr);
         sb.append(")");

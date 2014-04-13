@@ -1,175 +1,119 @@
 package com.ma.dc;
 
-import java.util.Comparator;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
+import android.annotation.SuppressLint;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Color;
 
 import com.ma.dc.database.CheckpointListObject;
-import com.ma.dc.util.LogHelper;
 
 class CheckpointListViewObj {
-    private final CheckpointListObject checkpointListObject;
+    //Database values
+    final CheckpointListObject checkpointListObject;
+    
+    //Resources object
+    final Resources res;
+    
+    private final int progressInPercent;
+    private final CheckStatus status;
+    
+    CheckpointListViewObj(final Cursor cursor, final long now, final Resources res) {
+        this.checkpointListObject = new CheckpointListObject(cursor);
+        this.res = res;
 
-    // Labels
-    private final CharSequence titleText;
-    private final int orderNr;
-    private final CharSequence updateFreqText;
-
-    // Calculation objects
-    private TimeCycle currentTimeCycle;
-    private TimeCycle nextTimeCycle;
-    private TimeCycle previousTimeCycle;
-    private long lastMeasurementTimeCycleNextEndTimeMillis = 0;
-
-    private long lastMeasurementTime;
-    private long lastMeasurementValue = 1;
-
-    private int progressInPercent;
-
-    // Compare values for sorting
-    private long timeToNextRequriedCheck = 0;
-
-    private CheckStatus status;
-    private CharSequence timeToNextCheckText;
-
-    private boolean progressVisible = true;
-
-    private final static long millisInSecond = 1000;
-    private final static long secondsInMinute = 60;
-    private final static long secondsInHour = secondsInMinute * 60;
-    private final static long secondsInDay = secondsInHour * 24;
-
-    static Comparator<CheckpointListViewObj> getComparator() {
-        return new Comparator<CheckpointListViewObj>() {
-
-            @Override
-            public int compare(CheckpointListViewObj lhs, CheckpointListViewObj rhs) {
-                if (SettingsFragment.getCheckpointSortOrder() == SettingsFragment.CHECKPOINT_SORT_ORDER_TYPE.DYMANIC) {
-                    if (lhs.status == rhs.status) {
-                        return (int) (lhs.timeToNextRequriedCheck - rhs.timeToNextRequriedCheck);
-                    } else {
-                        return (int) (rhs.status.getValue() - lhs.status.getValue());
-                    }
-                } else {
-                    return (int) (lhs.orderNr - rhs.orderNr);
-                }
-            }
-        };
-    }
-
-    private static void appendMillisAsUnitsToStringBuffer(final StringBuffer sb, final long millis,
-            final Resources res, final boolean singularValue) {
-        final long seconds = millis / millisInSecond;
-
-        if (seconds <= secondsInMinute) {
-            if (seconds > 1) {
-                sb.append(seconds);
-                sb.append(" ");
-                sb.append(res.getString(R.string.seconds));
-            } else {
-                if (singularValue) {
-                    sb.append(seconds);
-                    sb.append(" ");
-                }
-                sb.append(res.getString(R.string.second));
-            }
-        } else if (seconds < (secondsInMinute * 2)) {
-            sb.append("1:");
-            sb.append(seconds - secondsInMinute);
-            sb.append(" ");
-            sb.append(res.getString(R.string.minutes));
-        } else if (seconds < (secondsInHour * 2)) {
-            long minutes = (seconds / secondsInMinute) + 1;
-            if (minutes > 1) {
-                sb.append(minutes);
-                sb.append(" ");
-                sb.append(res.getString(R.string.minutes));
-            } else {
-                if (singularValue) {
-                    sb.append(minutes);
-                    sb.append(" ");
-                }
-                sb.append(res.getString(R.string.minute));
-            }
-        } else if (seconds < (secondsInDay * 2)) {
-            long hours = seconds / secondsInHour;
-            if (hours > 1) {
-                sb.append(hours);
-                sb.append(" ");
-                sb.append(res.getString(R.string.hours));
-            } else {
-                if (singularValue) {
-                    sb.append(hours);
-                    sb.append(" ");
-                }
-                sb.append(res.getString(R.string.hour));
-            }
+        if (getLatestMeasurementValue() == -1) {
+            status = CheckStatus.OUT_OF_ORDER;
+            progressInPercent = 0;
+            return;
+        }
+        
+        if (getNextMeasurementTime() < now) {
+            status = CheckStatus.ALARM;
+            progressInPercent = 100;
+            return;
+        }
+        
+        final long totalTimePeriod = getNextMeasurementTime() - getLatestMeasurementTimestamp();
+        final long periodSinceLast = now - getLatestMeasurementTimestamp();
+        progressInPercent = (int)(100 * ((double)periodSinceLast / (double)totalTimePeriod));
+        if(progressInPercent > 50) {
+            status = CheckStatus.TIME_TO_CHECK;
         } else {
-            long days = seconds / secondsInDay;
-            if (days > 1) {
-                sb.append(days);
-                sb.append(" ");
-                sb.append(res.getString(R.string.days));
+            status = CheckStatus.CHECK_OK;
+        }
+    }
+    
+    CharSequence getTitleText() {
+        return checkpointListObject.getOrderNr() + ": " + checkpointListObject.getName();
+    }
+    
+    CharSequence getUpdateFrequencyText() {
+        final int nrOfDays = checkpointListObject.getTimeDays();
+        final int nrOfHours = checkpointListObject.getTimeHours();
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(res.getString(R.string.checkpoint_row_period));
+        
+        sb.append(": ");
+        if(nrOfDays > 0) {
+            sb.append(nrOfDays);
+            sb.append(" ");
+            if(nrOfDays > 1) {
+                sb.append(res.getText(R.string.days));
             } else {
-                if (singularValue) {
-                    sb.append(days);
-                    sb.append(" ");
-                }
-                sb.append(res.getString(R.string.day));
+                sb.append(res.getText(R.string.day));
+            }
+            if(nrOfHours > 0) {
+                sb.append(", ");
             }
         }
-    }
-
-    private static CharSequence getTimeToNextCheckString(final Resources res, final long timeToCheck) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(res.getString(R.string.checkpoint_row_time_to_next_check_text));
-        sb.append(" ");
-        if (timeToCheck >= 0) {
-            sb.append(res.getString(R.string.in_time));
+        
+        if(nrOfHours > 0) {
+            sb.append(nrOfHours);
             sb.append(" ");
+            if(nrOfHours > 1) {
+                sb.append(res.getText(R.string.hours));
+            } else {
+                sb.append(res.getText(R.string.hour));
+            }
         }
-
-        appendMillisAsUnitsToStringBuffer(sb, Math.abs(timeToCheck), res, true);
-
-        if (timeToCheck < 0) {
-            sb.append(" ");
-            sb.append(res.getString(R.string.time_ago));
-        }
-
+        
         return sb.toString();
     }
-
-    private static CharSequence getUpdateFreqString(final Resources res, final int updates, final String timePeriod) {
-        StringBuffer sb = new StringBuffer();
-        String updateEvery = res.getString(R.string.checkpoint_row_update_frequency_text);
-
-        sb.append(updates);
-        sb.append(" ");
-        sb.append(updateEvery);
-        sb.append(" ");
-        sb.append(timePeriod);
-
+    
+    @SuppressLint("SimpleDateFormat")
+	CharSequence getNextCheckTimeText() {
+        long nextMeasurementTime = 0;
+        if(checkpointListObject.getNextMeasurementTime() != null) {
+            nextMeasurementTime = checkpointListObject.getNextMeasurementTime().longValue();
+        }
+        
+        final Calendar nextMeasurementCalendar = new GregorianCalendar();
+        nextMeasurementCalendar.setTimeInMillis(nextMeasurementTime);
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(res.getString(R.string.checkpoint_row_next_check));
+        sb.append(": ");
+        
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        sb.append(sdf.format(nextMeasurementCalendar.getTime()));
+        
         return sb.toString();
     }
+    
+    
 
-    CheckpointListViewObj(final CheckpointListObject checkpointListObject, final long now, final Resources res) {
-        this.checkpointListObject = checkpointListObject;
-        titleText = checkpointListObject.getOrderNr() + ": " + checkpointListObject.getName();
-        orderNr = checkpointListObject.getOrderNr();
+    private long getNextMeasurementTime() {
+        final Long nextMeasurementTime = checkpointListObject.getNextMeasurementTime();
+        return nextMeasurementTime != null ? nextMeasurementTime.longValue() : 0;
+    }
 
-        updateFreqText = getUpdateFreqString(res, checkpointListObject.getUpdates(),
-                checkpointListObject.getTimePeriod());
-
-        currentTimeCycle = TimeCycle.createCycleFromTime(checkpointListObject.getUpdates(),
-                checkpointListObject.getTimePeriod(), checkpointListObject.getStartTime(),
-                checkpointListObject.getStartDay(), now);
-        nextTimeCycle = currentTimeCycle.getNext();
-        previousTimeCycle = currentTimeCycle.getPrevious();
-
-        updateStatusValues();
-        updateTimeValues(now);
-        updateTextValues(res);
+    private long getLatestMeasurementTimestamp() {
+        return checkpointListObject.getLatestMeasurementTimestamp() != null ? checkpointListObject.getLatestMeasurementTimestamp().longValue() : 0;
     }
 
     CheckpointListObject getCheckpointListObject() {
@@ -178,10 +122,6 @@ class CheckpointListViewObj {
 
     int getProgressInPercent() {
         return progressInPercent;
-    }
-
-    CharSequence getTimeToNextCheckText() {
-        return timeToNextCheckText;
     }
 
     int getTitleBgColor() {
@@ -200,96 +140,12 @@ class CheckpointListViewObj {
         return Color.BLACK;
     }
 
-    CharSequence getTitleText() {
-        return titleText;
-    }
-
-    CharSequence getUpdateFreqText() {
-        return updateFreqText;
-    }
-
     boolean isProgressVisible() {
-        return progressVisible;
+        return status != CheckStatus.OUT_OF_ORDER;
     }
 
-    long updateValues(final long now, final Resources res) {
-        updateTimeCycle(now);
-        updateStatusValues();
-        if (lastMeasurementValue != -1) {
-            updateTimeValues(now);
-            updateTextValues(res);
-        }
-
-        return timeToNextRequriedCheck;
-    }
-
-    private void updateTimeCycle(final long now) {
-        if (!currentTimeCycle.isWithin(now)) {
-            previousTimeCycle = currentTimeCycle;
-            currentTimeCycle = currentTimeCycle.getNext();
-            nextTimeCycle = currentTimeCycle.getNext();
-
-            LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "UpdateTask", "updateTimeCycle: " + currentTimeCycle);
-        }
-    }
-
-    private void updateStatusValues() {
-        if (checkpointListObject.getLatestMeasurementTimestamp() != null
-                && checkpointListObject.getLatestMeasurementValue() != null
-                && lastMeasurementTime != checkpointListObject.getLatestMeasurementTimestamp().longValue()) {
-            lastMeasurementTime = checkpointListObject.getLatestMeasurementTimestamp().longValue();
-            lastMeasurementValue = checkpointListObject.getLatestMeasurementValue().intValue();
-
-            final TimeCycle afterLastMeasurementTimeCycle = currentTimeCycle.transferToTime(lastMeasurementTime)
-                    .getNext();
-
-            lastMeasurementTimeCycleNextEndTimeMillis = afterLastMeasurementTimeCycle.getEndDate();
-        }
-
-        if (lastMeasurementValue == -1) {
-            status = CheckStatus.OUT_OF_ORDER;
-            progressVisible = false;
-        } else {
-            progressVisible = true;
-        }
-    }
-
-    private void updateTimeValues(final long now) {
-        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateTimeValues");
-
-        if (previousTimeCycle.isBefore(lastMeasurementTime)) {
-            // Measurement was done before previous cycle
-
-            if (lastMeasurementTimeCycleNextEndTimeMillis != 0) {
-                timeToNextRequriedCheck = lastMeasurementTimeCycleNextEndTimeMillis - now;
-            } else {
-                timeToNextRequriedCheck = previousTimeCycle.getEndDate() - now;
-            }
-
-            status = CheckStatus.ALARM;
-            progressInPercent = 100;
-
-            return;
-        }
-
-        if (currentTimeCycle.isWithin(lastMeasurementTime)) {
-            // All is well, the progress bar should be empty
-            status = CheckStatus.CHECK_OK;
-            progressInPercent = 0;
-
-            timeToNextRequriedCheck = nextTimeCycle.getEndDate() - now;
-        } else {
-            LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "updateTimeValues", "default");
-
-            status = CheckStatus.TIME_TO_CHECK;
-            progressInPercent = currentTimeCycle.getProgressTowardsEndTimeInPercent(now);
-
-            timeToNextRequriedCheck = currentTimeCycle.getEndDate() - now;
-        }
-    }
-
-    private void updateTextValues(final Resources res) {
-        timeToNextCheckText = getTimeToNextCheckString(res, timeToNextRequriedCheck);
+    private int getLatestMeasurementValue() {
+        return checkpointListObject.getLatestMeasurementValue() != null ? checkpointListObject.getLatestMeasurementValue().intValue() : 1;
     }
 
     public int getCheckStatusValue() {

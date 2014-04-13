@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 class DcDatabaseHelper extends SQLiteOpenHelper {
 
     final static String DATABASE_NAME = "dc.db";
-    final static int DATABASE_VERSION = 1;
+    final static int DATABASE_VERSION = 3;
 
     DcDatabaseHelper(Context context, String name, CursorFactory factory, int version) {
         super(context, name, factory, version);

@@ -48,10 +48,9 @@ public final class DbCheckpointHelper {
         cv.put(DbTableCheckpoint.COLUMN_REV, checkpointCouchObject.getRev());
         cv.put(DbTableCheckpoint.COLUMN_NAME, checkpointCouchObject.getName());
         cv.put(DbTableCheckpoint.COLUMN_DESCRIPTION, checkpointCouchObject.getDescription());
-        cv.put(DbTableCheckpoint.COLUMN_UPDATES, checkpointCouchObject.getUpdates());
-        cv.put(DbTableCheckpoint.COLUMN_TIME_PERIOD, checkpointCouchObject.getTimePeriod());
-        cv.put(DbTableCheckpoint.COLUMN_START_TIME, checkpointCouchObject.getStartTime());
-        cv.put(DbTableCheckpoint.COLUMN_START_DAY, checkpointCouchObject.getStartDay());
+        cv.put(DbTableCheckpoint.COLUMN_TIME_DAYS, checkpointCouchObject.getTimeDays());
+        cv.put(DbTableCheckpoint.COLUMN_TIME_HOURS, checkpointCouchObject.getTimeHours());
+        cv.put(DbTableCheckpoint.COLUMN_EXCLUDE_WEEKENDS, checkpointCouchObject.getExcludeWeekends());
         cv.put(DbTableCheckpoint.COLUMN_ORDER_NR, checkpointCouchObject.getOrderNr());
 
         cv.put(DbTableCheckpoint.COLUMN_ERROR_TAG_1, checkpointCouchObject.getErrorTag1());

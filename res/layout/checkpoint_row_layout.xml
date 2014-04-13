@@ -45,7 +45,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="60"
-            android:text="@string/checkpoint_row_time_to_next_check_text"
+            android:text="@string/checkpoint_row_next_check"
             style="@android:style/TextAppearance.DeviceDefault.Medium"
             android:layout_gravity="center_vertical|left" />
 
@@ -56,7 +56,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="40"
-            android:text="@string/checkpoint_row_update_frequency_text"
+            android:text="@string/checkpoint_row_period"
             style="@android:style/TextAppearance.DeviceDefault.Medium"
             android:layout_gravity="center_vertical|left" />
     </LinearLayout>

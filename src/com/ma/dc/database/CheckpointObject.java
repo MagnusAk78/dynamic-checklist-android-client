@@ -1,6 +1,8 @@
 package com.ma.dc.database;
 
 import java.io.File;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -17,10 +19,9 @@ public final class CheckpointObject {
     private final String rev;
     private final String name;
     private final String discription;
-    private final int updates;
-    private final String timePeriod;
-    private final int startTime;
-    private final int startDay;
+    private final int timeDays;
+    private final int timeHours;
+    private final boolean excludeWeekends;
     private final int orderNr;
     private final String errorTag1;
     private final String errorTag2;
@@ -31,6 +32,7 @@ public final class CheckpointObject {
     private final String actionTag3;
     private final String actionTag4;
 
+    private Long nextMeasurementTime;
     private Long latestMeasurementTimestamp;
     private Integer latestMeasurementValue;
 
@@ -46,10 +48,9 @@ public final class CheckpointObject {
         stringId = cv.getAsString(DbTableCheckpoint.COLUMN_STRING_ID);
         name = cv.getAsString(DbTableCheckpoint.COLUMN_NAME);
         orderNr = cv.getAsInteger(DbTableCheckpoint.COLUMN_ORDER_NR).intValue();
-        startTime = cv.getAsInteger(DbTableCheckpoint.COLUMN_START_TIME).intValue();
-        startDay = cv.getAsInteger(DbTableCheckpoint.COLUMN_START_DAY).intValue();
-        timePeriod = cv.getAsString(DbTableCheckpoint.COLUMN_TIME_PERIOD);
-        updates = cv.getAsInteger(DbTableCheckpoint.COLUMN_UPDATES).intValue();
+        timeDays = cv.getAsInteger(DbTableCheckpoint.COLUMN_TIME_DAYS).intValue();
+        timeHours = cv.getAsInteger(DbTableCheckpoint.COLUMN_TIME_HOURS).intValue();
+        excludeWeekends = cv.getAsInteger(DbTableCheckpoint.COLUMN_EXCLUDE_WEEKENDS).intValue() > 0;
 
         rev = cv.getAsString(DbTableCheckpoint.COLUMN_REV);
         discription = cv.getAsString(DbTableCheckpoint.COLUMN_DESCRIPTION);
@@ -65,6 +66,7 @@ public final class CheckpointObject {
         // Can be null values
         latestMeasurementTimestamp = cv.getAsLong(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_DATE);
         latestMeasurementValue = cv.getAsInteger(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_VALUE);
+        nextMeasurementTime = cv.getAsLong(DbTableCheckpoint.COLUMN_NEXT_MEASUREMENT_TIME);
 
         imageFilename = cv.getAsString(DbTableCheckpoint.COLUMN_IMAGE_FILENAME);
         imageFilesize = cv.getAsInteger(DbTableCheckpoint.COLUMN_IMAGE_SIZE);
@@ -91,20 +93,16 @@ public final class CheckpointObject {
         return discription;
     }
 
-    public int getUpdates() {
-        return updates;
+    public int getTimeDays() {
+        return timeDays;
     }
 
-    public String getTimePeriod() {
-        return timePeriod;
+    public int getTimeHours() {
+        return timeHours;
     }
 
-    public int getStartTime() {
-        return startTime;
-    }
-
-    public int getStartDay() {
-        return startDay;
+    public boolean getExcludeWeekends() {
+        return excludeWeekends;
     }
 
     public int getOrderNr() {
@@ -150,7 +148,11 @@ public final class CheckpointObject {
     public Integer getLatestMeasurementValue() {
         return latestMeasurementValue;
     }
-
+    
+    public Long getNextMeasurementTime() {
+        return nextMeasurementTime;
+    }
+    
     String getImageFileName() {
         return imageFilename;
     }
@@ -172,11 +174,32 @@ public final class CheckpointObject {
 
     public void updateLatestMeasurement(final ContentResolver contentResolver, final long latestMeasurementTimestamp,
             final int latestMeasurementValue) {
+        
+        long nextMeasurementTime = latestMeasurementTimestamp + (this.timeDays * 24 + this.timeHours) * 3600000;
+        
+        if(this.excludeWeekends) {
+            final Calendar nextMeasurementCalendar = new GregorianCalendar();
+            
+            int dayOfWeek;
+            do {
+                nextMeasurementCalendar.setTimeInMillis(nextMeasurementTime);
+            
+                dayOfWeek = nextMeasurementCalendar.get(Calendar.DAY_OF_WEEK);
+                if(dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+                    if(timeDays > 0) {
+                        nextMeasurementTime += 24 * 3600000;
+                    } else {
+                        nextMeasurementTime += timeHours * 3600000;
+                    }
+                }
+            }while(dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY);
+        }
 
         final ContentValues cv = new ContentValues();
 
         cv.put(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_DATE, latestMeasurementTimestamp);
         cv.put(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_VALUE, latestMeasurementValue);
+        cv.put(DbTableCheckpoint.COLUMN_NEXT_MEASUREMENT_TIME, nextMeasurementTime);
 
         int changedRows = contentResolver.update(Uri.parse(DcContentProvider.CHECKPOINTS_URI + "/" + id), cv, null,
                 null);

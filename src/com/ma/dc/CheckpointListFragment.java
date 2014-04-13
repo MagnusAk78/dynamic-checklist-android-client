@@ -43,12 +43,12 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
         /**
          * Callback for when an item has been selected.
          */
-        public void onItemSelected(CheckpointListViewObj checkpointObj);
+        public void onItemSelected(CheckpointListViewObj checkpointListViewObj);
 
         /**
          * Callback for long clicks
          */
-        public void onItemLongClick(CheckpointListViewObj checkpointObj);
+        public void onItemLongClick(CheckpointListViewObj checkpointListViewObj);
     }
 
     private UpdateTask mUpdateTask = new UpdateTask();
@@ -57,8 +57,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
         public void run() {
             LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "UpdateTask.run");
-            myAdapter.updateAllValues();
-            myAdapter.sort(CheckpointListViewObj.getComparator());
+            //myAdapter.updateAllValues();
             myAdapter.notifyDataSetChanged();
             long proposedUpdateInterval = myAdapter.getProposedUpdateInterval();
 
@@ -89,14 +88,14 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
      */
     private static Callbacks sDummyCallbacks = new Callbacks() {
         @Override
-        public void onItemSelected(CheckpointListViewObj checkpointObj) {
+        public void onItemSelected(CheckpointListViewObj checkpointListViewObj) {
         }
 
-        public void onItemLongClick(CheckpointListViewObj checkpointObj) {
+        public void onItemLongClick(CheckpointListViewObj checkpointListViewObj) {
         }
     };
 
-    private CheckpointArrayAdapter myAdapter;
+    private CheckpointCursorAdapter myAdapter;
 
     private Handler mHandler = new Handler();
 
@@ -128,8 +127,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
         this.setRetainInstance(true);
 
         getLoaderManager().initLoader(0, null, this);
-        myAdapter = new CheckpointArrayAdapter(this.getActivity(), R.layout.checkpoint_row_layout);
-
+        myAdapter = new CheckpointCursorAdapter(this.getActivity(), null, 0);
         setListAdapter(myAdapter);
 
         setHasOptionsMenu(true);
@@ -141,7 +139,7 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
         this.getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
-                mCallbacks.onItemLongClick(myAdapter.getItem(pos));
+                mCallbacks.onItemLongClick((CheckpointListViewObj)myAdapter.getItem(pos));
                 return true;
             }
         });
@@ -158,8 +156,15 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+        String sortOrder;
+        if(SettingsFragment.getCheckpointSortOrder() == SettingsFragment.CHECKPOINT_SORT_ORDER_TYPE.DYMANIC) {
+            sortOrder = CheckpointListObject.getColumnNextMeasurementTime();
+        } else {
+            sortOrder = CheckpointListObject.getColumnOrderNr();
+        }
+
         return new CursorLoader(this.getActivity(), DcContentProvider.CHECKPOINTS_URI, CheckpointListObject.PROJECTION,
-                null, null, null);
+                null, null, sortOrder);
     }
 
     @Override
@@ -181,30 +186,20 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onListItemClick");
         super.onListItemClick(listView, view, position, id);
 
-        mCallbacks.onItemSelected(myAdapter.getItem(position));
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onLoaderReset");
-
-        // data is not available anymore, delete reference
-        myAdapter.clear();
+        mCallbacks.onItemSelected((CheckpointListViewObj)myAdapter.getItem(position));
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor newCursor) {
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onLoadFinished");
 
-        myAdapter.clear();
-
-        long now = System.currentTimeMillis();
-        while (newCursor.moveToNext()) {
-            CheckpointListViewObj clvo = new CheckpointListViewObj(new CheckpointListObject(newCursor), now,
-                    this.getResources());
-            myAdapter.add(clvo);
-        }
+        myAdapter.swapCursor(newCursor);
         mHandler.postDelayed(mUpdateTask, 100);
+    }
+    
+    @Override
+    public void onLoaderReset(Loader<Cursor> arg0) {
+        myAdapter.swapCursor(null);
     }
 
     @Override

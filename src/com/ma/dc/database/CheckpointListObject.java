@@ -6,17 +6,17 @@ import android.database.DatabaseUtils;
 
 public final class CheckpointListObject {
     public final static String[] PROJECTION = { DbTableCheckpoint.COLUMN_INC_ID, DbTableCheckpoint.COLUMN_NAME,
-            DbTableCheckpoint.COLUMN_ORDER_NR, DbTableCheckpoint.COLUMN_START_TIME, DbTableCheckpoint.COLUMN_START_DAY,
-            DbTableCheckpoint.COLUMN_TIME_PERIOD, DbTableCheckpoint.COLUMN_UPDATES,
+            DbTableCheckpoint.COLUMN_ORDER_NR, DbTableCheckpoint.COLUMN_TIME_DAYS, DbTableCheckpoint.COLUMN_TIME_HOURS,
+            DbTableCheckpoint.COLUMN_EXCLUDE_WEEKENDS, DbTableCheckpoint.COLUMN_NEXT_MEASUREMENT_TIME,
             DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_DATE, DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_VALUE };
 
     private final long id;
     private final String name;
     private final int orderNr;
-    private final int startTime;
-    private final int startDay;
-    private final String timePeriod;
-    private final int updates;
+    private final int timeDays;
+    private final int timeHours;
+    private final boolean excludeWeekends;
+    private final Long nextMeasurementTime;
     private final Long latestMeasurementTimestamp;
     private final Integer latestMeasurementValue;
 
@@ -27,14 +27,14 @@ public final class CheckpointListObject {
         id = cv.getAsLong(DbTableCheckpoint.COLUMN_INC_ID).longValue();
         name = cv.getAsString(DbTableCheckpoint.COLUMN_NAME);
         orderNr = cv.getAsInteger(DbTableCheckpoint.COLUMN_ORDER_NR).intValue();
-        startTime = cv.getAsInteger(DbTableCheckpoint.COLUMN_START_TIME).intValue();
-        startDay = cv.getAsInteger(DbTableCheckpoint.COLUMN_START_DAY).intValue();
-        timePeriod = cv.getAsString(DbTableCheckpoint.COLUMN_TIME_PERIOD);
-        updates = cv.getAsInteger(DbTableCheckpoint.COLUMN_UPDATES).intValue();
+        timeDays = cv.getAsInteger(DbTableCheckpoint.COLUMN_TIME_DAYS).intValue();
+        timeHours = cv.getAsInteger(DbTableCheckpoint.COLUMN_TIME_HOURS).intValue();
+        excludeWeekends = cv.getAsInteger(DbTableCheckpoint.COLUMN_EXCLUDE_WEEKENDS).intValue() > 0;
 
         // Can be null values
         latestMeasurementTimestamp = cv.getAsLong(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_DATE);
         latestMeasurementValue = cv.getAsInteger(DbTableCheckpoint.COLUMN_LATEST_MEASUREMENT_VALUE);
+        nextMeasurementTime = cv.getAsLong(DbTableCheckpoint.COLUMN_NEXT_MEASUREMENT_TIME);
     }
 
     public long getId() {
@@ -49,20 +49,20 @@ public final class CheckpointListObject {
         return orderNr;
     }
 
-    public int getStartTime() {
-        return startTime;
+    public int getTimeDays() {
+        return timeDays;
     }
 
-    public int getStartDay() {
-        return startDay;
+    public int getTimeHours() {
+        return timeHours;
     }
 
-    public String getTimePeriod() {
-        return timePeriod;
+    public boolean getExcludeWeekends() {
+        return excludeWeekends;
     }
-
-    public int getUpdates() {
-        return updates;
+    
+    public Long getNextMeasurementTime() {
+        return nextMeasurementTime;
     }
 
     public Long getLatestMeasurementTimestamp() {
@@ -71,5 +71,13 @@ public final class CheckpointListObject {
 
     public Integer getLatestMeasurementValue() {
         return latestMeasurementValue;
+    }
+
+    public static String getColumnNextMeasurementTime() {
+        return DbTableCheckpoint.COLUMN_NEXT_MEASUREMENT_TIME;
+    }
+
+    public static String getColumnOrderNr() {
+        return DbTableCheckpoint.COLUMN_ORDER_NR;
     }
 }

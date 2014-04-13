@@ -10,7 +10,7 @@ class DbTableMeasurement {
     // CheckpointTable
     static final String TABLE_NAME = "measurements";
 
-    static final String COLUMN_ID = "measurement_key_id";
+    static final String COLUMN_ID = "_id";
     static final String COLUMN_DATE = "measurement_date";
     static final String COLUMN_CHECKPOINT = "measurement_checkpoint_id";
     static final String COLUMN_VALUE = "measurement_value";
