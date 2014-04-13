@@ -19,8 +19,20 @@ public final class NewMeasurementObject {
         this.value = value;
     }
 
-    // Returns new id
-    public long storeToDatabase(ContentResolver contentResolver) {
+    /**
+     * @return New Id or -1
+     */
+    public long storeToDatabase(final ContentResolver contentResolver) {        
+        //Add this to the checkpoint as the latest measurement
+        final CheckpointObject checkpointObject = DbCheckpointHelper.
+                findCheckpointByStringId(contentResolver, checkpointStringId);
+        if(checkpointObject == null) {
+            //Something is wrong
+            return -1;
+        }
+        
+        checkpointObject.updateLatestMeasurement(contentResolver, timestamp, value);
+        
         final ContentValues cv = new ContentValues();
 
         cv.put(DbTableMeasurement.COLUMN_CHECKPOINT, checkpointStringId);
@@ -31,7 +43,6 @@ public final class NewMeasurementObject {
         final Uri insertedUri = contentResolver.insert(DcContentProvider.MEASUREMENTS_URI, cv);
 
         return Long.parseLong(insertedUri.getPathSegments().get(1));
-
     }
 
     public int getValue() {

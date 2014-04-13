@@ -243,6 +243,10 @@ public class CheckpointListFragment extends ListFragment implements LoaderCallba
         LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onStart");
 
         super.onStart();
+        
+        final String cloudantName = SettingsFragment.getCloudantName(this.getActivity());
+        final String databaseName = SettingsFragment.getDatabaseName(this.getActivity());
+        this.getActivity().setTitle(cloudantName + "/" + databaseName);
 
         getLoaderManager().restartLoader(0, null, this);
     }

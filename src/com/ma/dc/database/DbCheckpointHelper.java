@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -15,8 +16,20 @@ import com.ma.dc.util.LogHelper;
 public final class DbCheckpointHelper {
 
     public static int storeCheckpointFromNetwork(final ContentResolver contentReslover,
-            final CouchObjCheckpoint checkpointCouchObject, final CheckpointObject oldCheckpoint) {
+            final CouchObjCheckpoint checkpointCouchObject) {
         LogHelper.logDebug(DbCheckpointHelper.class, Common.LOG_TAG_DB, "createCheckpointCvFromNetwork");
+        
+        //First find if it's already in the database
+        CheckpointObject oldCheckpoint = null;
+        String selection = DbTableCheckpoint.COLUMN_STRING_ID + "=?";
+        String[] selectionArgs = {checkpointCouchObject.getId()};
+        final Cursor cursor = contentReslover.query(DcContentProvider.CHECKPOINTS_URI, CheckpointObject.PROJECTION, selection, 
+                selectionArgs, null);
+        if(cursor.moveToFirst()) {
+            oldCheckpoint = new CheckpointObject(cursor);
+        }
+        
+        cursor.close();
 
         if (oldCheckpoint != null) {
             LogHelper.logDebug(DbCheckpointHelper.class, Common.LOG_TAG_DB, "createCheckpointCvFromNetwork",
@@ -93,6 +106,35 @@ public final class DbCheckpointHelper {
             return 1;
         }
     }
+    
+    public static int removeAllCheckpointsExceptIdList(final Context context, 
+            final List<String> checkpointIdList) {
+        Cursor cursorToCheckpintsToDelete;
+        if(checkpointIdList == null || checkpointIdList.size() == 0) {
+            cursorToCheckpintsToDelete = context.getContentResolver().query(DcContentProvider.CHECKPOINTS_URI, CheckpointObject.PROJECTION, null, null, null);
+        }
+        
+        StringBuilder selectionBuilder = new StringBuilder();
+        for(int i=0; i<checkpointIdList.size(); i++) {
+            selectionBuilder.append(DbTableCheckpoint.COLUMN_STRING_ID);
+            selectionBuilder.append("!='");
+            selectionBuilder.append(checkpointIdList.get(i));
+            selectionBuilder.append("'");
+            if((i+1) < checkpointIdList.size()) {
+                selectionBuilder.append(" and ");
+            }
+        }
+        
+        int nr = 0;
+        cursorToCheckpintsToDelete = context.getContentResolver().query(DcContentProvider.CHECKPOINTS_URI, CheckpointObject.PROJECTION, selectionBuilder.toString(), null, null);
+        
+        while(cursorToCheckpintsToDelete.moveToNext()) {
+            new CheckpointObject(cursorToCheckpintsToDelete).deleteFromDatabase(context);
+            nr++;
+        }
+        cursorToCheckpintsToDelete.close();
+        return nr;
+    }
 
     public static List<CheckpointObject> getAllCheckpointsInDatabase(final ContentResolver contentResolver) {
         final Cursor checkpointsCursor = contentResolver.query(DcContentProvider.CHECKPOINTS_URI,
@@ -105,4 +147,33 @@ public final class DbCheckpointHelper {
         checkpointsCursor.close();
         return checkpointsFromDatabase;
     }
+    
+    public static void deleteImage(final Context context, final long id) {
+        CheckpointObject checkpointObject = null;
+        final Cursor cursor = context.getContentResolver().query(Uri.parse(DcContentProvider.CHECKPOINTS_URI + "/" + id), 
+                CheckpointObject.PROJECTION, null, null, null);
+        if(cursor.moveToFirst()) {
+            checkpointObject = new CheckpointObject(cursor);
+        }
+        cursor.close();
+        if(checkpointObject != null) {
+            checkpointObject.deleteImage(context);
+        }
+    }
+    
+    public static CheckpointObject findCheckpointByStringId(final ContentResolver contentResolver, final String stringId) {
+        CheckpointObject checkpointObject = null;
+        final String selection = DbTableCheckpoint.COLUMN_STRING_ID + "=?";
+        final String[] selectionArgs = { stringId };
+        final Cursor cursor = contentResolver.query(DcContentProvider.CHECKPOINTS_URI, CheckpointObject.PROJECTION, selection, 
+                selectionArgs, null);
+        if(cursor.moveToFirst()) {
+            checkpointObject = new CheckpointObject(cursor);
+        }
+        
+        cursor.close();
+        
+        return checkpointObject;
+    }
+    
 }

@@ -123,6 +123,7 @@ public class CheckpointDetailFragment extends Fragment implements OnClickListene
             if (cursor.moveToFirst()) {
                 checkpointObject = new CheckpointObject(cursor);
             }
+            cursor.close();
         }
     }
 

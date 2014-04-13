@@ -208,12 +208,23 @@ public final class CheckpointObject {
             final MeasurementObject measurement = new MeasurementObject(cursor);
             measurement.deleteFromDatabase(context.getContentResolver());
         }
+        
+        cursor.close();
 
-        // Remove local image file
-        final File fileToDelete = new File(context.getFilesDir(), getFullImageFilePath());
-        fileToDelete.delete();
+        deleteImageFile(context);
 
         // Delete checkpoint
         return context.getContentResolver().delete(Uri.parse(DcContentProvider.CHECKPOINTS_URI + "/" + id), null, null);
+    }
+    
+    void deleteImage(final Context context) {
+        deleteImageFile(context);
+        updateDownloadImage(context.getContentResolver(), true);
+    }
+    
+    private void deleteImageFile(final Context context) {
+        // Remove local image file
+        final File fileToDelete = new File(context.getFilesDir(), getFullImageFilePath());
+        fileToDelete.delete();
     }
 }

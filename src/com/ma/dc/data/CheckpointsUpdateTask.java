@@ -62,19 +62,11 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
             LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "doInBackground", "checkpointList == null");
             return Boolean.FALSE;
         }
+        
+        saveTheNewDataToDatabase(checkpointList);
 
-        final List<CheckpointObject> checkpointDatabaseList = DbCheckpointHelper.getAllCheckpointsInDatabase(context
-                .getContentResolver());
-
-        if (checkpointList.size() > 0) {
-            if (checkpointDatabaseList.size() > 0) {
-                removeAllCheckpointsNoLongerOnServer(checkpointList, checkpointDatabaseList);
-            }
-            final int updated = saveTheNewDataToDatabase(checkpointList, checkpointDatabaseList);
-            LogHelper
-                    .logDebug(UploadMeasurementsTask.class.getName(), "doInBackground", "database changed: " + updated);
-        }
-
+        removeAllCheckpointsNoLongerOnServer(checkpointList);
+       
         try {
             getLatestMeasurementForEachCheckpoint(DbCheckpointHelper.getAllCheckpointsInDatabase(context
                     .getContentResolver()));
@@ -217,46 +209,19 @@ class CheckpointsUpdateTask extends AsyncTask<Void, Void, Boolean> implements Co
         return checkpointList;
     }
 
-    private int removeAllCheckpointsNoLongerOnServer(final List<CouchObjCheckpoint> checkpointList,
-            final List<CheckpointObject> checkpointDatabaseList) {
-        int nrRemoved = 0;
-        for (CheckpointObject checkpointObject : checkpointDatabaseList) {
-            if (!couchObjCheckpointListContainsId(checkpointList, checkpointObject.getStringId())) {
-                nrRemoved += checkpointObject.deleteFromDatabase(context);
-            }
+    private int removeAllCheckpointsNoLongerOnServer(final List<CouchObjCheckpoint> checkpointList) {
+        List<String> checkpointIdList = new ArrayList<String>(checkpointList.size());
+        for (CouchObjCheckpoint couchObjCheckpoint : checkpointList) {
+            checkpointIdList.add(couchObjCheckpoint.getId());
         }
 
-        return nrRemoved;
+        return DbCheckpointHelper.removeAllCheckpointsExceptIdList(context, checkpointIdList);
     }
 
-    private boolean couchObjCheckpointListContainsId(final List<CouchObjCheckpoint> checkpointList,
-            final String stringId) {
-        for (CouchObjCheckpoint checkpointObj : checkpointList) {
-            if (checkpointObj.getId().compareTo(stringId) == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private CheckpointObject findCheckpointObjectWithStringId(final List<CheckpointObject> checkpointList,
-            final String stringId) {
-        for (CheckpointObject checkpointObject : checkpointList) {
-            if (checkpointObject.getStringId().compareTo(stringId) == 0) {
-                return checkpointObject;
-            }
-        }
-        return null;
-    }
-
-    private int saveTheNewDataToDatabase(final List<CouchObjCheckpoint> checkpointList,
-            List<CheckpointObject> checkpointDatabaseList) {
+    private int saveTheNewDataToDatabase(final List<CouchObjCheckpoint> checkpointList) {
         int updated = 0;
         for (CouchObjCheckpoint checkpoint : checkpointList) {
-            final CheckpointObject oldVersion = findCheckpointObjectWithStringId(checkpointDatabaseList,
-                    checkpoint.getId());
-            updated += DbCheckpointHelper.storeCheckpointFromNetwork(context.getContentResolver(), checkpoint,
-                    oldVersion);
+            updated += DbCheckpointHelper.storeCheckpointFromNetwork(context.getContentResolver(), checkpoint);
         }
         return updated;
     }

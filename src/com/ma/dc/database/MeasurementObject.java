@@ -26,7 +26,7 @@ public final class MeasurementObject {
         checkpointStringId = cv.getAsString(DbTableMeasurement.COLUMN_CHECKPOINT);
         timestamp = cv.getAsLong(DbTableMeasurement.COLUMN_DATE).longValue();
         tag = cv.getAsString(DbTableMeasurement.COLUMN_TAG);
-        value = cv.getAsInteger(DbTableMeasurement.COLUMN_DATE).intValue();
+        value = cv.getAsInteger(DbTableMeasurement.COLUMN_VALUE).intValue();
     }
 
     public long getId() {

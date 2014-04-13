@@ -1,8 +1,11 @@
 package com.ma.dc;
 
+import com.ma.dc.database.DbCheckpointHelper;
 import com.ma.dc.util.LogHelper;
 import com.ma.dc.R;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -11,7 +14,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.widget.Toast;
 
 /**
  * An activity representing a list of Checkpoints. This activity has different
@@ -115,16 +117,38 @@ public class CheckpointListActivity extends FragmentActivity implements Checkpoi
             startActivity(detailIntent);
         }
     }
+    
+    private long checkpointIdLongClicked;
 
     public void onItemLongClick(CheckpointListViewObj checkpointListViewObj) {
-        long checkpointId = checkpointListViewObj.getCheckpointListObject().getId();
-        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onItemSelected", "id: " + checkpointId);
+        checkpointIdLongClicked = checkpointListViewObj.getCheckpointListObject().getId();
+        LogHelper.logDebug(this, Common.LOG_TAG_MAIN, "onItemSelected", "id: " + checkpointIdLongClicked);
+        
+        // Instantiate an AlertDialog.Builder with its constructor
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        if (mTwoPane) {
-            Toast.makeText(this, "Twopane: true, Checkpoint: " + checkpointId, Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Twopane: false, Checkpoint: " + checkpointId, Toast.LENGTH_LONG).show();
-        }
+        // Chain together various setter methods to set the dialog characteristics
+        builder.setMessage(R.string.delete_image_dialog_message)
+               .setTitle(R.string.delete_image_dialog_title);
+        
+        // Add the buttons
+        builder.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       // User clicked OK button
+                       DbCheckpointHelper.deleteImage(CheckpointListActivity.this, CheckpointListActivity.this.checkpointIdLongClicked);
+                   }
+               });
+        
+        builder.setNegativeButton(R.string.Cancel, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       // User cancelled the dialog, do nothing
+                   }
+               });
+
+        // 3. Get the AlertDialog from create()
+        AlertDialog deleteImageDialog = builder.create();
+        
+        deleteImageDialog.show();
     }
 
     @Override

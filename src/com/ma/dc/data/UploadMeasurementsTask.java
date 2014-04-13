@@ -45,9 +45,6 @@ final class UploadMeasurementsTask extends AsyncTask<Void, Void, Boolean> {
 
         final List<MeasurementObject> allMeasurementNotSentToServer = getAllMeasurementNotSentToServer();
 
-        LogHelper.logDebug(this, Common.LOG_TAG_NETWORK, "doInBackground", "allMeasurementNotSentToServer.size:"
-                + allMeasurementNotSentToServer.size());
-
         boolean returnValue = Boolean.TRUE;
         if (allMeasurementNotSentToServer.size() > 0) {
             returnValue = sendNewMeasurementsToServer(allMeasurementNotSentToServer);

@@ -79,7 +79,7 @@ public class DcContentProvider extends ContentProvider {
             tableName = DbTableMeasurement.TABLE_NAME;
 
             final String measurementId = uri.getPathSegments().get(1);
-            selection = DbTableCheckpoint.COLUMN_INC_ID + "=" + measurementId
+            selection = DbTableMeasurement.COLUMN_ID + "=" + measurementId
                     + (!TextUtils.isEmpty(selection) ? " and (" + selection + ')' : "");
             break;
         default:

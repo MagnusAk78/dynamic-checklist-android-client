@@ -48,7 +48,9 @@
     <string name="time_ago">ago</string>
     <string name="in_time">in</string>
     
-    <string name="dialog_ok_after_action_title">Checkpoint OK after action</string>
+    <string name="dialog_ok_after_action_title">Checkpoint OK after action</string>    
+    <string name="delete_image_dialog_title">Delete image locally</string>
+    <string name="delete_image_dialog_message">Are you sure you want to delete the image for this checkpoint?</string>
     
     <string name="dialog_not_ok_title">Checkpoint NOT OK</string>
     
